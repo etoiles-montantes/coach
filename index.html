@@ -54,7 +54,12 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .tool[aria-pressed="true"]{background:var(--embt-red);color:var(--embt-cream)}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
-.board{flex:1;min-height:0;display:flex;justify-content:center}
+.board{flex:1;min-height:0;display:flex;justify-content:center;position:relative}
+.focusbar{display:none;position:absolute;top:6px;right:6px;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--embt-cream);border:1px solid var(--line)}
+.focusbar .label{min-width:3.5em;font-size:.95rem}
+#board.focus .focusbar{display:flex}
+#board.focus header,#board.focus .steps,#board.focus .options,#board.focus .optedit,#board.focus .status{display:none}
+#board.focus .stage{padding:4px}
 #court{width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;display:block}
 .steps{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);background:var(--embt-cream);color:var(--embt-navy);border-radius:999px;padding:8px 14px;font-weight:600;font-size:.9rem}
@@ -71,7 +76,6 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .optedit[hidden]{display:none}
 .optedit label{font-weight:800}
 .optedit input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--embt-navy);min-width:0;width:16em;max-width:100%}
-.shared{font-family:var(--font-body);font-weight:600;font-size:.8rem;opacity:.8}
 .home-body{flex:1;overflow-y:auto;padding:22px 16px;width:100%;max-width:820px;margin:0 auto}
 .home-body h2{font-family:var(--font-body);font-weight:800;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;margin:0 0 16px;padding-bottom:6px;border-bottom:2px solid var(--embt-gold)}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -144,6 +148,12 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <svg id="court" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Terrain de basket">
           <g id="courtLayer"></g><g id="dynLayer"></g>
         </svg>
+        <div class="focusbar" aria-label="Navigation en mode agrandi">
+          <button class="btn round" id="fPrev" aria-label="Étape précédente">‹</button>
+          <span class="label" id="fLabel"></span>
+          <button class="btn round" id="fNext" aria-label="Étape suivante">›</button>
+          <button class="btn" id="fExit">Réduire</button>
+        </div>
       </div>
       <div class="options" id="options" hidden></div>
       <div class="steps">
@@ -153,6 +163,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <button class="btn edit-only" id="addStep">+ Ajouter une étape</button>
         <button class="btn edit-only" id="delStep">Supprimer l’étape</button>
         <button class="btn edit-only" id="addOpt">+ Ajouter une option</button>
+        <button class="btn" id="focusBtn">⛶ Agrandir</button>
         <button class="btn primary" id="play">▶ Lecture</button>
       </div>
       <div class="optedit edit-only" id="optEdit" hidden>
@@ -538,8 +549,8 @@ function updateUI() {
   document.querySelectorAll('[data-court]').forEach(b => b.setAttribute('aria-pressed', b.dataset.court === state.court));
   if (!path.length) return;
   const n = path.length, busy = !!anim, k = anim ? anim.k : state.cur;
-  const all = leavesOf(state), shared = all.length > 1 ? leavesOf(state, path[k].id).length : 0;
-  $('#stepLabel').innerHTML = `Étape ${k + 1} / ${n}` + (shared > 1 ? ` <span class="shared">· commune à ${shared} options</span>` : '');
+  const all = leavesOf(state);
+  $('#stepLabel').textContent = `Étape ${k + 1} / ${n}`;
   const opts = $('#options'); opts.hidden = all.length < 2;
   const endId = path[n - 1].id;
   opts.innerHTML = all.map((l, i) => `<button class="chip" data-leaf="${i}" aria-pressed="${l.end === endId}" ${busy ? 'disabled' : ''}><b>Option ${l.label}</b>${l.name ? ' · ' + esc(l.name) : ''}</button>`).join('');
@@ -556,6 +567,8 @@ function updateUI() {
   $('#delStep').disabled = busy || (n === 1 && !path[0].children.length);
   $('#undo').disabled = busy || !undoStack.length;
   $('#play').textContent = anim ? '■ Stop' : '▶ Lecture';
+  $('#fLabel').textContent = `${k + 1} / ${n}`;
+  $('#fPrev').disabled = $('#prev').disabled; $('#fNext').disabled = $('#next').disabled;
   if (!hintTimer) $('#status').textContent = mode === 'edit' ? HELP[tool] : 'Lecture pour voir le système, ‹ › pour avancer étape par étape.';
 }
 function renderAll() { renderCourt(); renderDyn(); updateUI(); }
@@ -782,7 +795,7 @@ $('#play').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (mode !== 'edit' || e.target.tagName === 'INPUT') return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
-  if (e.key === 'Escape') { draft = null; sel = null; renderDyn(); return; }
+  if (e.key === 'Escape') { draft = null; sel = null; setFocus(false); renderDyn(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !anim) {
     e.preventDefault();
     if (sel.kind === 'player') removePlayer(sel.id); else removeAction(sel.id);
@@ -811,6 +824,11 @@ $('#newSys').addEventListener('click', () => {
   setTimeout(() => { $('#sysName').focus(); $('#sysName').select(); }, 50);
 });
 $('#toHome').addEventListener('click', () => { location.hash = '#/'; });
+const setFocus = on => { $('#board').classList.toggle('focus', on); };
+$('#focusBtn').addEventListener('click', () => setFocus(true));
+$('#fExit').addEventListener('click', () => setFocus(false));
+$('#fPrev').addEventListener('click', () => $('#prev').click());
+$('#fNext').addEventListener('click', () => $('#next').click());
 $('#driveBtn').addEventListener('click', () => { if (drive.status === 'ok') drive.run(() => drive.sync()); else drive.connect(); });
 $('#toEdit').addEventListener('click', () => { location.hash = '#/s/' + currentId + '/edit'; });
 $('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId; });
@@ -820,7 +838,7 @@ function route() {
   if (anim) stopAnim();
   draft = null; drag = null; disarmDel();
   const m = location.hash.match(/^#\/s\/([^/]+)(\/edit)?$/), sys = m && store.get(m[1]);
-  if (!sys) { currentId = null; showView('home'); renderHome(); document.title = 'Coach · EMBT'; return; }
+  if (!sys) { currentId = null; setFocus(false); showView('home'); renderHome(); document.title = 'Coach · EMBT'; return; }
   if (currentId !== sys.id) {
     currentId = sys.id; state = migrate(JSON.parse(JSON.stringify(sys.data))); undoStack = []; state.cur = 0;
   }
