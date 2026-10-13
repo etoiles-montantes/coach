@@ -77,7 +77,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .label{font-family:var(--font-sub);font-weight:800;font-size:1.05rem;min-width:7.5em;text-align:center}
 .status{min-height:1.4em;text-align:center;font-size:.9rem;margin:0}
 .options{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
-.options[hidden]{display:none}
+.options[hidden],#board[data-mode="view"] .options{display:none}
 .chip{border:1px solid var(--line);background:var(--embt-cream);color:var(--embt-navy);border-radius:999px;padding:6px 12px;font-weight:600;font-size:.85rem}
 .chip b{font-weight:900}
 .chip[aria-pressed="true"]{background:var(--embt-navy);border-color:var(--embt-navy);color:var(--embt-cream)}
@@ -375,7 +375,7 @@ function leavesOf(data, from) {     // toutes les options complètes : numéro, 
     const nm = n.name || name;
     if (!n.children.length) return out.push({ label, name: nm, end: id, choice });
     if (n.children.length === 1) return walk(n.children[0], label, nm, choice);
-    n.children.forEach((c, i) => walk(c, label ? label + '.' + (i + 1) : String(i + 1), nm, { ...choice, [id]: i }));
+    n.children.forEach((c, i) => walk(c, label ? label + '.' + (i + 1) : String(i + 1), null, { ...choice, [id]: i }));
   })(from || data.root, '', null, {});
   return out;
 }
@@ -495,6 +495,9 @@ function renderCourt() {
   s += full
     ? `<g transform="matrix(1 0 0 -1 0 28)">${half}</g><path d="M0 14H15" ${ln}/><circle cx="7.5" cy="14" r="1.8" fill="${RED}" ${st}/>`
     : `<path d="M5.7 14A1.8 1.8 0 0 1 9.3 14Z" fill="${RED}" ${st}/>`;
+  // emblème du club au rond central, sur aplat rouge (charte : zone calme derrière le logo)
+  const logo = document.querySelector('.brand img').src, L = full ? 3 : 2.6;
+  s += `<image href="${logo}" x="${7.5 - L / 2}" y="${14 - L / 2}" width="${L}" height="${L}" preserveAspectRatio="xMidYMid meet" pointer-events="none"/>`;
   courtLayer.innerHTML = s;
 }
 
@@ -556,12 +559,12 @@ function updateUI() {
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === tool));
   document.querySelectorAll('[data-court]').forEach(b => b.setAttribute('aria-pressed', b.dataset.court === state.court));
   if (!path.length) return;
-  const n = path.length, busy = !!anim, k = anim ? anim.k : state.cur;
+  const n = path.length, busy = !!anim && !anim.paused, k = anim ? anim.k : state.cur;
   const all = leavesOf(state);
   $('#stepLabel').textContent = `Étape ${k + 1} / ${n}`;
   const opts = $('#options'); opts.hidden = all.length < 2;
   const endId = path[n - 1].id;
-  opts.innerHTML = all.map((l, i) => `<button class="chip" data-leaf="${i}" aria-pressed="${l.end === endId}" ${busy ? 'disabled' : ''}><b>Option ${l.label}</b>${l.name ? ' · ' + esc(l.name) : ''}</button>`).join('');
+  opts.innerHTML = all.map((l, i) => `<button class="chip" data-leaf="${i}" aria-pressed="${l.end === endId}" ${busy ? 'disabled' : ''}><b>${l.name ? esc(l.name) : 'Option ' + l.label}</b></button>`).join('');
   const b = mode === 'edit' && !busy ? branchAt(state.cur) : null;
   $('#optEdit').hidden = !b;
   if (b) {
@@ -713,8 +716,16 @@ $('#delSys').addEventListener('click', () => {
   disarmDel(); store.remove(currentId); currentId = null; location.hash = '#/';
 });
 function disarmDel() { clearTimeout(delArmed); delArmed = 0; $('#delSys').textContent = 'Supprimer'; $('#delSys').classList.remove('primary'); }
-$('#prev').addEventListener('click', () => { state.cur--; sel = null; save(); renderDyn(); updateUI(); });
-$('#next').addEventListener('click', () => { state.cur++; sel = null; save(); renderDyn(); updateUI(); });
+function cancelPlay() { if (!anim) return; const k = anim.k; stopAnim(); if (mode === 'view') state.cur = k; }
+$('#prev').addEventListener('click', () => { cancelPlay(); hideFork(); state.cur--; sel = null; save(); renderDyn(); updateUI(); });
+$('#next').addEventListener('click', () => {
+  cancelPlay(); hideFork();
+  const node = path[state.cur];
+  if (mode === 'view' && node.children.length > 1) {      // bifurcation : choisir l'option avant d'avancer
+    return askFork(state.cur, i => { state.choice[node.id] = i; recomputePath(); state.cur++; renderDyn(); updateUI(); });
+  }
+  state.cur++; sel = null; save(); renderDyn(); updateUI();
+});
 function newNode(children = []) { const id = uid(); return (state.nodes[id] = { id, actions: [], children }); }
 function afterTree(cur) { state.cur = cur; recomputePath(); sel = null; save(); renderDyn(); updateUI(); }
 $('#addStep').addEventListener('click', () => {           // insère après l'étape en cours, sur le chemin suivi
@@ -789,7 +800,7 @@ function askFork(k, done) {
   const box = $('#fork');
   box.querySelector('.fork-btns').innerHTML = path[k].children.map((_, i) => {
     const l = childLabel(k, i);
-    return `<button class="btn primary" data-child="${i}"><b>Option ${l.label}</b>${l.name ? ' · ' + esc(l.name) : ''}</button>`;
+    return `<button class="btn primary" data-child="${i}"><b>${l.name ? esc(l.name) : 'Option ' + l.label}</b></button>`;
   }).join('');
   box.onclick = e => { const b = e.target.closest('[data-child]'); if (b) { hideFork(); done(+b.dataset.child); } };
   box.hidden = false;
@@ -800,13 +811,25 @@ $('#play').addEventListener('click', () => {
   if (anim) { const k = anim.k, fin = anim.final; stopAnim(); if (mode === 'view' && !fin) { state.cur = k; renderDyn(); updateUI(); } return; }
   sel = null; draft = null;
   const view = mode === 'view', D = 1300, back = state.cur;
-  let k = view ? state.cur : 0, t0 = null, lastFork = -1;
+  const above = view ? branchAt(state.cur) : null;        // déjà dans une option : la fin ramène à sa bifurcation
+  let k = view ? state.cur : 0, t0 = null, lastFork = above ? above.j - 1 : -1;
   anim = { k, t: 0 }; updateUI();
+  const pauseAt = () => {                                 // bifurcation : pause, on choisit l'option
+    const node = path[k];
+    state.cur = k; anim.k = k; anim.t = 1; anim.paused = true; renderDyn(); updateUI();
+    askFork(k, i => {
+      if (!anim) return;
+      state.choice[node.id] = i; recomputePath(); lastFork = k;
+      k++; t0 = null; anim.paused = false; anim.k = k; anim.t = 0; updateUI();
+      raf = requestAnimationFrame(step);
+    });
+  };
   const finish = () => {
     anim = { k: path.length - 1, t: 1, final: true }; renderDyn(); updateUI();
     setTimeout(() => {
       if (!anim || !anim.final) return;
-      anim = null; state.cur = view ? Math.max(lastFork, 0) : back; renderDyn(); updateUI();
+      if (view && lastFork >= 0) { k = lastFork; anim = { k, t: 1 }; return pauseAt(); }  // retour juste avant le choix
+      anim = null; state.cur = view ? 0 : back; renderDyn(); updateUI();
     }, 1000);
   };
   const step = ts => {
@@ -814,16 +837,7 @@ $('#play').addEventListener('click', () => {
     if (t0 === null) t0 = ts;
     let t = (ts - t0) / D;
     if (t >= 1) {
-      const node = path[k];
-      if (view && node.children.length > 1) {           // bifurcation : pause, on choisit l'option
-        anim.t = 1; anim.paused = true; renderDyn(); updateUI();
-        return askFork(k, i => {
-          if (!anim) return;
-          state.choice[node.id] = i; recomputePath(); lastFork = k;
-          k++; t0 = null; anim.paused = false; anim.k = k; anim.t = 0;
-          raf = requestAnimationFrame(step);
-        });
-      }
+      if (view && path[k].children.length > 1) return pauseAt();
       k++; t0 = ts; t = 0;
       if (k >= path.length) return finish();
     }
@@ -832,7 +846,7 @@ $('#play').addEventListener('click', () => {
   };
   raf = requestAnimationFrame(step);
 });
-$('#first').addEventListener('click', () => { state.cur = 0; sel = null; renderDyn(); updateUI(); });
+$('#first').addEventListener('click', () => { cancelPlay(); hideFork(); state.cur = 0; sel = null; renderDyn(); updateUI(); });
 
 document.addEventListener('keydown', e => {
   if (mode !== 'edit' || e.target.tagName === 'INPUT') return;
