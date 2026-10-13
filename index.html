@@ -93,6 +93,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 <section class="view" id="home">
   <header>
     <h1>Coach</h1>
+    <button class="hbtn" id="driveBtn" hidden></button>
     <button class="hbtn primary" id="newSys">+ Nouveau système</button>
   </header>
   <div class="home-body">
@@ -180,9 +181,10 @@ function fresh(seed, court = 'half') {
 /* Bibliothèque : tout l'accès au stockage passe par `store` (à remplacer par Google Drive). */
 const LIB_KEY = 'tableau-tactique-lib-v1';
 const store = {
-  lib: { systems: {} },
+  lib: { systems: {}, dirty: {}, trash: [] },
   load() {
     try { const l = JSON.parse(localStorage.getItem(LIB_KEY)); if (l && l.systems) this.lib = l; } catch (e) {}
+    this.lib.dirty = this.lib.dirty || {}; this.lib.trash = this.lib.trash || [];
     try { // reprise de l'ancien tableau unique, s'il existe
       const old = JSON.parse(localStorage.getItem(KEY));
       if (old && old.frames) { this.put({ id: newId(), name: 'Mon premier système', data: old }); localStorage.removeItem(KEY); }
@@ -190,10 +192,129 @@ const store = {
   },
   list() { return Object.values(this.lib.systems).sort((a, b) => b.updatedAt - a.updatedAt); },
   get(id) { return this.lib.systems[id] || null; },
-  put(sys) { sys.updatedAt = Date.now(); this.lib.systems[sys.id] = sys; this.persist(); },
-  remove(id) { delete this.lib.systems[id]; this.persist(); },
+  put(sys) { sys.updatedAt = Date.now(); this.lib.systems[sys.id] = sys; this.lib.dirty[sys.id] = true; this.persist(); drive.push(); },
+  remove(id) {
+    const sys = this.get(id); if (sys && sys.driveId) this.lib.trash.push(sys.driveId);
+    delete this.lib.systems[id]; delete this.lib.dirty[id]; this.persist(); drive.push();
+  },
+  putRemote(sys) { this.lib.systems[sys.id] = sys; },
+  removeLocal(id) { delete this.lib.systems[id]; delete this.lib.dirty[id]; },
   persist() { try { localStorage.setItem(LIB_KEY, JSON.stringify(this.lib)); } catch (e) {} }
 };
+/* ---------- Google Drive (Google Identity Services + API REST Drive v3) ---------- */
+const GOOGLE_CLIENT_ID = '873875861453-0tlekb1bnrrrf1ctbur43bkqddtuo28s.apps.googleusercontent.com';
+const DRIVE_FOLDER = 'Coach – systèmes';
+const DRIVE_LABEL = {
+  unavailable: 'Enregistré sur cet appareil', off: 'Se connecter à Google Drive', connecting: 'Connexion…',
+  syncing: 'Synchronisation…', ok: '✓ Drive synchronisé', expired: 'Reconnecter Google Drive', error: 'Erreur Drive · réessayer'
+};
+const drive = {
+  client: null, token: null, exp: 0, folderId: null, status: 'loading', busy: false, again: false, timer: 0,
+  init() {
+    const sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+    sc.onload = () => {
+      try {
+        this.client = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.file',
+          callback: r => this.onToken(r), error_callback: () => this.set('off')
+        });
+        this.set('off');
+      } catch (e) { this.set('unavailable'); }
+    };
+    sc.onerror = () => this.set('unavailable');
+    document.head.appendChild(sc);
+  },
+  set(st) { this.status = st; updateDriveBtn(); },
+  connect() { if (this.client) { this.set('connecting'); this.client.requestAccessToken({ prompt: '' }); } },
+  onToken(r) {
+    if (r.error || !r.access_token) return this.set('off');
+    this.token = r.access_token; this.exp = Date.now() + ((r.expires_in || 3600) - 60) * 1000;
+    this.run(() => this.sync());
+  },
+  push() { clearTimeout(this.timer); this.timer = setTimeout(() => this.run(() => this.flush()), 1200); },
+  async run(fn) {
+    if (!this.token) return;
+    if (this.busy) { this.again = true; return; }
+    this.busy = true; this.set('syncing');
+    try { await fn(); this.set('ok'); onDriveSynced(); }
+    catch (e) { console.error('Drive', e); this.token = e.auth ? null : this.token; this.set(e.auth ? 'expired' : 'error'); }
+    finally { this.busy = false; if (this.again && this.token) { this.again = false; this.run(() => this.flush()); } }
+  },
+  async api(path, opt = {}) {
+    if (!this.token || Date.now() > this.exp) { const e = new Error('auth'); e.auth = true; throw e; }
+    const r = await fetch('https://www.googleapis.com' + path, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + this.token } });
+    if (r.status === 401) { const e = new Error('auth'); e.auth = true; throw e; }
+    if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+    const txt = await r.text(); try { return JSON.parse(txt); } catch (e) { return txt; }
+  },
+  async folder() {
+    if (this.folderId) return this.folderId;
+    const q = `name='${DRIVE_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const r = await this.api('/drive/v3/files?' + new URLSearchParams({ q, fields: 'files(id)', spaces: 'drive' }));
+    if (r.files && r.files.length) return (this.folderId = r.files[0].id);
+    const c = await this.api('/drive/v3/files?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: DRIVE_FOLDER, mimeType: 'application/vnd.google-apps.folder' }) });
+    return (this.folderId = c.id);
+  },
+  async sync() {
+    const folder = await this.folder();
+    const q = `'${folder}' in parents and trashed=false`;
+    const r = await this.api('/drive/v3/files?' + new URLSearchParams({ q, pageSize: '1000', fields: 'files(id,appProperties)', spaces: 'drive' }));
+    const remote = new Map();
+    for (const f of r.files || []) { const cid = f.appProperties && f.appProperties.coachId; if (cid && !store.lib.trash.includes(f.id)) remote.set(cid, f); }
+    for (const [cid, f] of remote) {          // récupérer ce qui est plus récent sur Drive
+      const loc = store.get(cid), rUp = +(f.appProperties.updatedAt || 0);
+      if (!loc || (!store.lib.dirty[cid] && rUp > loc.updatedAt)) {
+        const c = await this.api(`/drive/v3/files/${f.id}?alt=media`);
+        if (c && c.data && c.data.frames) store.putRemote({ id: cid, name: c.name || 'Sans nom', updatedAt: c.updatedAt || rUp, data: c.data, driveId: f.id });
+      } else if (!loc.driveId) loc.driveId = f.id;
+    }
+    for (const sys of store.list()) {         // supprimés ailleurs, ou jamais envoyés
+      if (sys.driveId && !remote.has(sys.id) && !store.lib.dirty[sys.id]) store.removeLocal(sys.id);
+      else if (!sys.driveId) store.lib.dirty[sys.id] = true;
+    }
+    store.persist();
+    await this.flush();
+  },
+  async flush() {
+    for (const did of [...store.lib.trash]) { // corbeille Drive (récupérable), jamais de suppression définitive
+      try { await this.api(`/drive/v3/files/${did}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }) }); }
+      catch (e) { if (e.status !== 404) throw e; }
+      store.lib.trash = store.lib.trash.filter(x => x !== did); store.persist();
+    }
+    for (const id of Object.keys(store.lib.dirty)) {
+      const sys = store.get(id); if (!sys) { delete store.lib.dirty[id]; continue; }
+      const stamp = sys.updatedAt, res = await this.upload(sys), cur = store.get(id);
+      if (cur) { cur.driveId = res.id; if (cur.updatedAt === stamp) delete store.lib.dirty[id]; }
+      store.persist();
+    }
+  },
+  async upload(sys) {
+    const meta = { name: sys.name + '.json', mimeType: 'application/json', appProperties: { coachId: sys.id, updatedAt: String(sys.updatedAt) } };
+    if (!sys.driveId) meta.parents = [await this.folder()];
+    const b = 'coach' + Math.random().toString(36).slice(2);
+    const content = JSON.stringify({ app: 'coach', version: 1, id: sys.id, name: sys.name, updatedAt: sys.updatedAt, data: sys.data });
+    const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${b}--`;
+    const path = sys.driveId ? `/upload/drive/v3/files/${sys.driveId}?uploadType=multipart&fields=id` : '/upload/drive/v3/files?uploadType=multipart&fields=id';
+    try { return await this.api(path, { method: sys.driveId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body }); }
+    catch (e) { if (e.status === 404 && sys.driveId) { sys.driveId = null; return this.upload(sys); } throw e; }
+  }
+};
+function updateDriveBtn() {
+  const b = $('#driveBtn'), st = drive.status;
+  b.hidden = st === 'loading'; b.textContent = DRIVE_LABEL[st] || '';
+  b.disabled = st === 'unavailable' || st === 'connecting' || st === 'syncing';
+}
+function onDriveSynced() {
+  if ($('#home').classList.contains('active')) return renderHome();
+  if (!currentId || mode === 'edit' || anim) return;
+  const sys = store.get(currentId);
+  if (!sys) { location.hash = '#/'; return; }
+  const cur = state.cur; state = JSON.parse(JSON.stringify(sys.data)); state.cur = Math.min(cur, state.frames.length - 1);
+  $('#sysTitle').textContent = sys.name; renderAll();
+}
+
 function newId() { return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function save() { if (mode !== 'edit') return; const sys = store.get(currentId); if (sys) { sys.data = state; store.put(sys); } }
 
@@ -565,6 +686,7 @@ $('#newSys').addEventListener('click', () => {
   setTimeout(() => { $('#sysName').focus(); $('#sysName').select(); }, 50);
 });
 $('#toHome').addEventListener('click', () => { location.hash = '#/'; });
+$('#driveBtn').addEventListener('click', () => { if (drive.status === 'ok') drive.run(() => drive.sync()); else drive.connect(); });
 $('#toEdit').addEventListener('click', () => { location.hash = '#/s/' + currentId + '/edit'; });
 $('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId; });
 
@@ -586,6 +708,7 @@ function route() {
 window.addEventListener('hashchange', route);
 store.load();
 route();
+drive.init();
 })();
 </script>
 </body>
