@@ -54,7 +54,12 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .tool[aria-pressed="true"]{background:var(--embt-red);color:var(--embt-cream)}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
-.board{display:flex;justify-content:center}
+.board{display:flex;justify-content:center;position:relative}
+.fork{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:var(--embt-cream);border:1px solid var(--line);border-top:4px solid var(--embt-gold);border-radius:14px;padding:14px 16px;max-width:calc(100% - 24px);text-align:center}
+.fork[hidden]{display:none}
+.fork p{font-family:var(--font-title);font-weight:900;font-size:1.15rem;margin:0 0 10px}
+.fork-btns{display:flex;flex-direction:column;gap:8px}
+.fork-btns b{font-weight:900}
 /* Terrain toujours en grand : il occupe la hauteur de l'écran (moins le bandeau et la barre d'outils),
    les commandes sont dessous et se rejoignent en faisant défiler. */
 #board{overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -152,9 +157,14 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <svg id="court" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Terrain de basket">
           <g id="courtLayer"></g><g id="dynLayer"></g>
         </svg>
+        <div class="fork" id="fork" hidden role="dialog" aria-label="Choix de l’option">
+          <p>Quelle option ?</p>
+          <div class="fork-btns"></div>
+        </div>
       </div>
       <div class="options" id="options" hidden></div>
       <div class="steps">
+        <button class="btn round view-only" id="first" aria-label="Revenir au début">⏮</button>
         <button class="btn round" id="prev" aria-label="Étape précédente">‹</button>
         <span class="label" id="stepLabel">Étape 1 / 1</span>
         <button class="btn round" id="next" aria-label="Étape suivante">›</button>
@@ -560,6 +570,7 @@ function updateUI() {
   }
   $('#addOpt').disabled = busy;
   $('#prev').disabled = busy || state.cur === 0;
+  $('#first').disabled = busy || state.cur === 0;
   $('#next').disabled = busy || state.cur === n - 1;
   $('#addStep').disabled = busy;
   $('#delStep').disabled = busy || (n === 1 && !path[0].children.length);
@@ -764,29 +775,64 @@ $('#options').addEventListener('click', e => {
 });
 
 const ease = t => t * t * (3 - 2 * t);
-function stopAnim() { cancelAnimationFrame(raf); anim = null; renderDyn(); updateUI(); }
+function stopAnim() { cancelAnimationFrame(raf); anim = null; hideFork(); renderDyn(); updateUI(); }
+
+/* Lecture. En mode lecture : part de l'étape affichée, s'arrête à chaque bifurcation pour choisir l'option,
+   puis revient à la dernière bifurcation choisie (ou à l'étape 1). En édition : joue l'option sélectionnée. */
+function childLabel(k, i) {
+  let depth = 0; for (let j = 0; j <= k; j++) if (path[j].children.length > 1) depth++;
+  const cid = path[k].children[i], first = leavesOf(state, cid)[0];
+  const g = first && leavesOf(state).find(x => x.end === first.end);
+  return { label: g ? g.label.split('.').slice(0, depth).join('.') : String(i + 1), name: state.nodes[cid].name };
+}
+function askFork(k, done) {
+  const box = $('#fork');
+  box.querySelector('.fork-btns').innerHTML = path[k].children.map((_, i) => {
+    const l = childLabel(k, i);
+    return `<button class="btn primary" data-child="${i}"><b>Option ${l.label}</b>${l.name ? ' · ' + esc(l.name) : ''}</button>`;
+  }).join('');
+  box.onclick = e => { const b = e.target.closest('[data-child]'); if (b) { hideFork(); done(+b.dataset.child); } };
+  box.hidden = false;
+}
+function hideFork() { $('#fork').hidden = true; }
+
 $('#play').addEventListener('click', () => {
-  if (anim) return stopAnim();
+  if (anim) { const k = anim.k, fin = anim.final; stopAnim(); if (mode === 'view' && !fin) { state.cur = k; renderDyn(); updateUI(); } return; }
   sel = null; draft = null;
-  const n = path.length, D = 1300; let k = 0, t0 = null;
-  anim = { k: 0, t: 0 }; updateUI();
+  const view = mode === 'view', D = 1300, back = state.cur;
+  let k = view ? state.cur : 0, t0 = null, lastFork = -1;
+  anim = { k, t: 0 }; updateUI();
+  const finish = () => {
+    anim = { k: path.length - 1, t: 1, final: true }; renderDyn(); updateUI();
+    setTimeout(() => {
+      if (!anim || !anim.final) return;
+      anim = null; state.cur = view ? Math.max(lastFork, 0) : back; renderDyn(); updateUI();
+    }, 1000);
+  };
   const step = ts => {
-    if (!anim) return;
+    if (!anim || anim.paused) return;
     if (t0 === null) t0 = ts;
     let t = (ts - t0) / D;
     if (t >= 1) {
-      k++; t0 = ts; t = 0;
-      if (k >= n) {
-        anim = { k: n - 1, t: 1, final: true }; renderDyn();
-        setTimeout(() => { if (anim && anim.final) stopAnim(); }, 1000);
-        return;
+      const node = path[k];
+      if (view && node.children.length > 1) {           // bifurcation : pause, on choisit l'option
+        anim.t = 1; anim.paused = true; renderDyn(); updateUI();
+        return askFork(k, i => {
+          if (!anim) return;
+          state.choice[node.id] = i; recomputePath(); lastFork = k;
+          k++; t0 = null; anim.paused = false; anim.k = k; anim.t = 0;
+          raf = requestAnimationFrame(step);
+        });
       }
+      k++; t0 = ts; t = 0;
+      if (k >= path.length) return finish();
     }
     anim.k = k; anim.t = ease(t); renderDyn(); updateUI();
     raf = requestAnimationFrame(step);
   };
   raf = requestAnimationFrame(step);
 });
+$('#first').addEventListener('click', () => { state.cur = 0; sel = null; renderDyn(); updateUI(); });
 
 document.addEventListener('keydown', e => {
   if (mode !== 'edit' || e.target.tagName === 'INPUT') return;
@@ -843,7 +889,7 @@ function route() {
   }
   recomputePath();
   mode = m[2] ? 'edit' : 'view';
-  if (mode === 'view') { sel = null; }
+  if (mode === 'view') { sel = null; state.cur = 0; }
   $('#board').dataset.mode = mode;
   $('#sysTitle').textContent = sys.name; $('#sysName').value = sys.name; document.title = sys.name + ' · Coach EMBT';
   showView('board'); fitCourt(); renderAll();
