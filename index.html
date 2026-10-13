@@ -54,13 +54,17 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .tool[aria-pressed="true"]{background:var(--embt-red);color:var(--embt-cream)}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
-.board{flex:1;min-height:0;display:flex;justify-content:center;position:relative}
-.focusbar{display:none;position:absolute;top:6px;right:6px;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--embt-cream);border:1px solid var(--line)}
-.focusbar .label{min-width:3.5em;font-size:.95rem}
-#board.focus .focusbar{display:flex}
-#board.focus header,#board.focus .steps,#board.focus .options,#board.focus .optedit,#board.focus .status{display:none}
-#board.focus .stage{padding:4px}
-#court{width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;display:block}
+.board{display:flex;justify-content:center}
+/* Terrain toujours en grand : il occupe la hauteur de l'écran (moins le bandeau et la barre d'outils),
+   les commandes sont dessous et se rejoignent en faisant défiler. */
+#board{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#board main{flex:1 0 auto}
+#court{height:auto;max-height:calc(100vh - var(--hdr,56px) - var(--tb,0px) - 16px);
+  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - var(--hdr,56px) - var(--tb,0px) - 16px)}
+#board[data-mode="view"] #court{touch-action:pan-y}
+.tools{position:sticky;top:0;align-self:start;max-height:100vh;max-height:100dvh;z-index:2;
+  background:linear-gradient(rgba(8,33,53,.06),rgba(8,33,53,.06)),var(--embt-cream)}
+#court{width:100%;touch-action:none;user-select:none;-webkit-user-select:none;display:block}
 .steps{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);background:var(--embt-cream);color:var(--embt-navy);border-radius:999px;padding:8px 14px;font-weight:600;font-size:.9rem}
 .btn.round{width:40px;height:40px;padding:0;font-size:1.2rem;line-height:1}
@@ -88,10 +92,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .name-input:focus{outline:none;border-bottom-color:var(--embt-gold)}
 #board h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 #board[data-mode="view"] .edit-only,#board[data-mode="edit"] .view-only{display:none}
-#board[data-mode="view"] main{grid-template-columns:1fr;grid-template-rows:1fr}
+#board[data-mode="view"] main{grid-template-columns:1fr;grid-template-rows:auto}
 @media (max-width:720px){
-  main{grid-template-columns:1fr;grid-template-rows:1fr auto}
-  .tools{flex-direction:row;order:2;overflow-x:auto;overflow-y:hidden;padding:6px 8px;border-right:0;border-top:1px solid var(--line)}
+  main{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .tools{flex-direction:row;order:2;overflow-x:auto;overflow-y:hidden;padding:6px 8px;border-right:0;border-top:1px solid var(--line);top:auto;bottom:0;align-self:end;max-height:none}
   .tool{flex:0 0 auto;width:60px}
   .sep{width:1px;height:auto;margin:6px 2px}
   .stage{padding:8px;gap:8px}
@@ -148,12 +152,6 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <svg id="court" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Terrain de basket">
           <g id="courtLayer"></g><g id="dynLayer"></g>
         </svg>
-        <div class="focusbar" aria-label="Navigation en mode agrandi">
-          <button class="btn round" id="fPrev" aria-label="Étape précédente">‹</button>
-          <span class="label" id="fLabel"></span>
-          <button class="btn round" id="fNext" aria-label="Étape suivante">›</button>
-          <button class="btn" id="fExit">Réduire</button>
-        </div>
       </div>
       <div class="options" id="options" hidden></div>
       <div class="steps">
@@ -163,7 +161,6 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <button class="btn edit-only" id="addStep">+ Ajouter une étape</button>
         <button class="btn edit-only" id="delStep">Supprimer l’étape</button>
         <button class="btn edit-only" id="addOpt">+ Ajouter une option</button>
-        <button class="btn" id="focusBtn">⛶ Agrandir</button>
         <button class="btn primary" id="play">▶ Lecture</button>
       </div>
       <div class="optedit edit-only" id="optEdit" hidden>
@@ -469,6 +466,7 @@ function actionSVG(a, F, o = {}) {
 function renderCourt() {
   const full = state.court === 'full', H = full ? 28 : 14;
   svg.setAttribute('viewBox', full ? '-0.9 -0.9 16.8 29.8' : '-0.9 -0.9 16.8 16.1');
+  svg.style.aspectRatio = full ? '16.8 / 29.8' : '16.8 / 16.1';
   const st = `stroke="${NAVY}" stroke-width="0.07"`, ln = st + ' fill="none"';
   const cr = `stroke="${CREAM}" stroke-width="0.07" fill="none"`;   // tracés dans la raquette rouge
   const defs = `<defs><pattern id="parquet" patternUnits="userSpaceOnUse" width="1.2" height="3.6">
@@ -567,8 +565,6 @@ function updateUI() {
   $('#delStep').disabled = busy || (n === 1 && !path[0].children.length);
   $('#undo').disabled = busy || !undoStack.length;
   $('#play').textContent = anim ? '■ Stop' : '▶ Lecture';
-  $('#fLabel').textContent = `${k + 1} / ${n}`;
-  $('#fPrev').disabled = $('#prev').disabled; $('#fNext').disabled = $('#next').disabled;
   if (!hintTimer) $('#status').textContent = mode === 'edit' ? HELP[tool] : 'Lecture pour voir le système, ‹ › pour avancer étape par étape.';
 }
 function renderAll() { renderCourt(); renderDyn(); updateUI(); }
@@ -795,7 +791,7 @@ $('#play').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (mode !== 'edit' || e.target.tagName === 'INPUT') return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
-  if (e.key === 'Escape') { draft = null; sel = null; setFocus(false); renderDyn(); return; }
+  if (e.key === 'Escape') { draft = null; sel = null; renderDyn(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !anim) {
     e.preventDefault();
     if (sel.kind === 'player') removePlayer(sel.id); else removeAction(sel.id);
@@ -824,11 +820,14 @@ $('#newSys').addEventListener('click', () => {
   setTimeout(() => { $('#sysName').focus(); $('#sysName').select(); }, 50);
 });
 $('#toHome').addEventListener('click', () => { location.hash = '#/'; });
-const setFocus = on => { $('#board').classList.toggle('focus', on); };
-$('#focusBtn').addEventListener('click', () => setFocus(true));
-$('#fExit').addEventListener('click', () => setFocus(false));
-$('#fPrev').addEventListener('click', () => $('#prev').click());
-$('#fNext').addEventListener('click', () => $('#next').click());
+/* hauteur du bandeau et de la barre d'outils (mobile) pour dimensionner le terrain */
+function fitCourt() {
+  const b = $('#board'), mobile = matchMedia('(max-width:720px)').matches;
+  b.style.setProperty('--hdr', b.querySelector('header').offsetHeight + 'px');
+  b.style.setProperty('--tb', mobile && mode === 'edit' ? b.querySelector('.tools').offsetHeight + 'px' : '0px');
+}
+if (window.ResizeObserver) new ResizeObserver(fitCourt).observe($('#board header'));
+window.addEventListener('resize', fitCourt);
 $('#driveBtn').addEventListener('click', () => { if (drive.status === 'ok') drive.run(() => drive.sync()); else drive.connect(); });
 $('#toEdit').addEventListener('click', () => { location.hash = '#/s/' + currentId + '/edit'; });
 $('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId; });
@@ -838,7 +837,7 @@ function route() {
   if (anim) stopAnim();
   draft = null; drag = null; disarmDel();
   const m = location.hash.match(/^#\/s\/([^/]+)(\/edit)?$/), sys = m && store.get(m[1]);
-  if (!sys) { currentId = null; setFocus(false); showView('home'); renderHome(); document.title = 'Coach · EMBT'; return; }
+  if (!sys) { currentId = null; showView('home'); renderHome(); document.title = 'Coach · EMBT'; return; }
   if (currentId !== sys.id) {
     currentId = sys.id; state = migrate(JSON.parse(JSON.stringify(sys.data))); undoStack = []; state.cur = 0;
   }
@@ -847,7 +846,7 @@ function route() {
   if (mode === 'view') { sel = null; }
   $('#board').dataset.mode = mode;
   $('#sysTitle').textContent = sys.name; $('#sysName').value = sys.name; document.title = sys.name + ' · Coach EMBT';
-  showView('board'); renderAll();
+  showView('board'); fitCourt(); renderAll();
 }
 window.addEventListener('hashchange', route);
 store.load();
