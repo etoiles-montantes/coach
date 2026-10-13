@@ -55,10 +55,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
 .board{display:flex;justify-content:center;position:relative}
-.fork{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:var(--embt-cream);border:1px solid var(--line);border-top:4px solid var(--embt-gold);border-radius:14px;padding:14px 16px;max-width:calc(100% - 24px);text-align:center}
+.fork{align-self:center;background:var(--embt-cream);border:1px solid var(--line);border-top:4px solid var(--embt-gold);border-radius:14px;padding:12px 16px;max-width:100%;text-align:center}
 .fork[hidden]{display:none}
 .fork p{font-family:var(--font-title);font-weight:900;font-size:1.15rem;margin:0 0 10px}
-.fork-btns{display:flex;flex-direction:column;gap:8px}
+.fork-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .fork-btns b{font-weight:900}
 /* Terrain toujours en grand : il occupe la hauteur de l'écran (moins le bandeau et la barre d'outils),
    les commandes sont dessous et se rejoignent en faisant défiler. */
@@ -157,10 +157,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <svg id="court" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Terrain de basket">
           <g id="courtLayer"></g><g id="dynLayer"></g>
         </svg>
-        <div class="fork" id="fork" hidden role="dialog" aria-label="Choix de l’option">
-          <p>Quelle option ?</p>
-          <div class="fork-btns"></div>
-        </div>
+      </div>
+      <div class="fork" id="fork" hidden role="group" aria-label="Choix de l’option">
+        <p>Quelle option ?</p>
+        <div class="fork-btns"></div>
       </div>
       <div class="options" id="options" hidden></div>
       <div class="steps">
@@ -804,6 +804,7 @@ function askFork(k, done) {
   }).join('');
   box.onclick = e => { const b = e.target.closest('[data-child]'); if (b) { hideFork(); done(+b.dataset.child); } };
   box.hidden = false;
+  box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });   // visible même si le terrain occupe tout l'écran
 }
 function hideFork() { $('#fork').hidden = true; }
 
