@@ -16,6 +16,7 @@
   --soft:var(--color-water-green);--tool-text:var(--color-navy);
   --active-bg:var(--color-navy);--active-text:var(--color-white);
   --btn-bg:var(--color-white);--btn-text:var(--color-navy);--btn-border:var(--color-periwinkle);
+  --card-bg:var(--color-periwinkle);--card-text:var(--color-black);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -37,7 +38,22 @@
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Mulish,system-ui,sans-serif}
-.app{height:100%;display:flex;flex-direction:column}
+.app{height:100%}
+.view{display:none;height:100%;flex-direction:column}
+.view.active{display:flex}
+.home-body{flex:1;overflow-y:auto;padding:20px 16px;width:100%;max-width:820px;margin:0 auto}
+.home-body h2{font-family:"Funnel Display","Avenir Next",ui-sans-serif,sans-serif;font-weight:500;font-size:1.1rem;margin:0 0 14px}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.card{width:100%;text-align:left;border:0;border-radius:16px;padding:16px;background:var(--card-bg);color:var(--card-text);display:flex;flex-direction:column;gap:6px;min-height:100px}
+.card .name{font-family:"Funnel Display","Avenir Next",ui-sans-serif,sans-serif;font-weight:700;font-size:1.15rem;overflow-wrap:anywhere}
+.card .meta{font-size:.85rem}
+.empty{text-align:center;padding:40px 10px}
+.name-input{font-family:"Funnel Display","Avenir Next",ui-sans-serif,sans-serif;font-weight:700;font-size:1.15rem;background:transparent;color:var(--bar-text);border:0;border-bottom:2px solid var(--color-periwinkle);padding:4px 2px;min-width:0;flex:1 1 160px;max-width:380px;margin-right:auto}
+.name-input:focus{outline:none;border-bottom-color:var(--color-chartreuse)}
+#board h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.hbtn.primary{background:var(--color-chartreuse);border-color:var(--color-chartreuse);color:var(--color-black)}
+#board[data-mode="view"] .edit-only,#board[data-mode="edit"] .view-only{display:none}
+#board[data-mode="view"] main{grid-template-columns:1fr;grid-template-rows:1fr}
 header{background:var(--bar);color:var(--bar-text);display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}
 h1{font-family:"Funnel Display","Avenir Next",Futura,ui-sans-serif,sans-serif;font-weight:700;font-size:1.3rem;margin:0 auto 0 0;letter-spacing:-.01em}
 button{font:inherit;cursor:pointer}
@@ -74,17 +90,33 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 </head>
 <body>
 <div class="app">
+<section class="view" id="home">
   <header>
-    <h1>Tableau tactique</h1>
-    <div class="seg" role="group" aria-label="Terrain">
+    <h1>Coach</h1>
+    <button class="hbtn primary" id="newSys">+ Nouveau système</button>
+  </header>
+  <div class="home-body">
+    <h2>Mes systèmes</h2>
+    <ul class="list" id="list"></ul>
+    <p class="empty" id="empty">Aucun système pour l’instant. Crée le premier avec « + Nouveau système ».</p>
+  </div>
+</section>
+<section class="view" id="board" data-mode="view">
+  <header>
+    <button class="hbtn view-only" id="toHome">‹ Systèmes</button>
+    <button class="hbtn edit-only" id="done">✓ Terminé</button>
+    <h1 class="view-only" id="sysTitle"></h1>
+    <input class="name-input edit-only" id="sysName" aria-label="Nom du système" maxlength="80">
+    <button class="hbtn primary view-only" id="toEdit">Modifier</button>
+    <div class="seg edit-only" role="group" aria-label="Terrain">
       <button data-court="half">Demi-terrain</button>
       <button data-court="full">Terrain entier</button>
     </div>
-    <button class="hbtn" id="undo">Annuler</button>
-    <button class="hbtn" id="reset">Nouveau tableau</button>
+    <button class="hbtn edit-only" id="undo">Annuler</button>
+    <button class="hbtn edit-only" id="delSys">Supprimer</button>
   </header>
   <main>
-    <nav class="tools" aria-label="Outils">
+    <nav class="tools edit-only" aria-label="Outils">
       <button class="tool" data-tool="select"><svg viewBox="0 0 24 24"><path d="M6 3l12 7-5.5 1.6L10 17z" fill="currentColor"/></svg>Déplacer</button>
       <div class="sep"></div>
       <button class="tool" data-tool="O"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Mulish,sans-serif">1</text></svg>Attaquant</button>
@@ -108,13 +140,14 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
         <button class="btn round" id="prev" aria-label="Étape précédente">‹</button>
         <span class="label" id="stepLabel">Étape 1 / 1</span>
         <button class="btn round" id="next" aria-label="Étape suivante">›</button>
-        <button class="btn" id="addStep">+ Ajouter une étape</button>
-        <button class="btn" id="delStep">Supprimer l’étape</button>
+        <button class="btn edit-only" id="addStep">+ Ajouter une étape</button>
+        <button class="btn edit-only" id="delStep">Supprimer l’étape</button>
         <button class="btn primary" id="play">▶ Lecture</button>
       </div>
       <p class="status" id="status" aria-live="polite"></p>
     </section>
   </main>
+</section>
 </div>
 
 <script>
@@ -144,13 +177,30 @@ function fresh(seed, court = 'half') {
   }
   return s;
 }
-function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && s.frames ? s : null; } catch (e) { return null; } }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+/* Bibliothèque : tout l'accès au stockage passe par `store` (à remplacer par Google Drive). */
+const LIB_KEY = 'tableau-tactique-lib-v1';
+const store = {
+  lib: { systems: {} },
+  load() {
+    try { const l = JSON.parse(localStorage.getItem(LIB_KEY)); if (l && l.systems) this.lib = l; } catch (e) {}
+    try { // reprise de l'ancien tableau unique, s'il existe
+      const old = JSON.parse(localStorage.getItem(KEY));
+      if (old && old.frames) { this.put({ id: newId(), name: 'Mon premier système', data: old }); localStorage.removeItem(KEY); }
+    } catch (e) {}
+  },
+  list() { return Object.values(this.lib.systems).sort((a, b) => b.updatedAt - a.updatedAt); },
+  get(id) { return this.lib.systems[id] || null; },
+  put(sys) { sys.updatedAt = Date.now(); this.lib.systems[sys.id] = sys; this.persist(); },
+  remove(id) { delete this.lib.systems[id]; this.persist(); },
+  persist() { try { localStorage.setItem(LIB_KEY, JSON.stringify(this.lib)); } catch (e) {} }
+};
+function newId() { return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function save() { if (mode !== 'edit') return; const sys = store.get(currentId); if (sys) { sys.data = state; store.put(sys); } }
 
-let state = load() || fresh(true);
-state.cur = Math.min(state.cur || 0, state.frames.length - 1);
+let currentId = null, mode = 'view';
+let state = fresh(true);
 let tool = 'select', sel = null, drag = null, draft = null, anim = null, raf = 0, hintTimer = 0;
-const undoStack = [];
+let undoStack = [];
 
 function commit() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); }
 function undo() { if (!undoStack.length || anim) return; state = JSON.parse(undoStack.pop()); sel = null; save(); renderAll(); }
@@ -313,7 +363,7 @@ function updateUI() {
   $('#delStep').disabled = busy || n === 1;
   $('#undo').disabled = busy || !undoStack.length;
   $('#play').textContent = anim ? '■ Stop' : '▶ Lecture';
-  if (!hintTimer) $('#status').textContent = HELP[tool];
+  if (!hintTimer) $('#status').textContent = mode === 'edit' ? HELP[tool] : 'Lecture pour voir le système, ‹ › pour avancer étape par étape.';
 }
 function renderAll() { renderCourt(); renderDyn(); updateUI(); }
 function hint(msg) {
@@ -372,7 +422,7 @@ function svgPoint(e) {
   const q = p.matrixTransform(svg.getScreenCTM().inverse()); return { x: q.x, y: q.y };
 }
 svg.addEventListener('pointerdown', e => {
-  if (anim) return;
+  if (anim || mode !== 'edit') return;
   e.preventDefault();
   const p = svgPoint(e), F = derive()[state.cur];
   const el = e.target.closest('[data-k]'), k = el && el.dataset.k, id = el && el.dataset.id;
@@ -437,11 +487,19 @@ document.querySelectorAll('[data-court]').forEach(b => b.addEventListener('click
   save(); renderAll();
 }));
 $('#undo').addEventListener('click', undo);
-$('#reset').addEventListener('click', () => {
-  if (anim) return;
-  commit(); state = fresh(false, state.court); sel = null; save(); renderAll();
-  hint('Tableau vidé. « Annuler » le restaure.');
+$('#sysName').addEventListener('input', e => {
+  const sys = store.get(currentId); if (!sys) return;
+  sys.name = e.target.value.trim() || 'Sans nom'; store.put(sys);
 });
+let delArmed = 0;
+$('#delSys').addEventListener('click', () => {
+  if (!delArmed) {
+    $('#delSys').textContent = 'Confirmer ?'; $('#delSys').classList.add('primary');
+    delArmed = setTimeout(disarmDel, 3000); return;
+  }
+  disarmDel(); store.remove(currentId); currentId = null; location.hash = '#/';
+});
+function disarmDel() { clearTimeout(delArmed); delArmed = 0; $('#delSys').textContent = 'Supprimer'; $('#delSys').classList.remove('primary'); }
 $('#prev').addEventListener('click', () => { state.cur--; sel = null; save(); renderDyn(); updateUI(); });
 $('#next').addEventListener('click', () => { state.cur++; sel = null; save(); renderDyn(); updateUI(); });
 $('#addStep').addEventListener('click', () => {
@@ -478,6 +536,7 @@ $('#play').addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', e => {
+  if (mode !== 'edit' || e.target.tagName === 'INPUT') return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
   if (e.key === 'Escape') { draft = null; sel = null; renderDyn(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !anim) {
@@ -487,7 +546,46 @@ document.addEventListener('keydown', e => {
   }
 });
 
-renderAll();
+/* ---------- écrans : accueil, lecture, édition (navigation par #) ---------- */
+const COURT_NAME = { half: 'Demi-terrain', full: 'Terrain entier' };
+function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function renderHome() {
+  const items = store.list();
+  $('#empty').hidden = items.length > 0;
+  $('#list').innerHTML = items.map(sys => {
+    const n = sys.data.frames.length, d = new Date(sys.updatedAt).toLocaleDateString('fr-FR');
+    return `<li><button class="card" data-open="${sys.id}"><span class="name">${esc(sys.name)}</span>
+      <span class="meta">${COURT_NAME[sys.data.court] || ''} · ${n} étape${n > 1 ? 's' : ''} · modifié le ${d}</span></button></li>`;
+  }).join('');
+}
+$('#list').addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) location.hash = '#/s/' + b.dataset.open; });
+$('#newSys').addEventListener('click', () => {
+  const sys = { id: newId(), name: 'Nouveau système', data: fresh(true) };
+  store.put(sys); location.hash = '#/s/' + sys.id + '/edit';
+  setTimeout(() => { $('#sysName').focus(); $('#sysName').select(); }, 50);
+});
+$('#toHome').addEventListener('click', () => { location.hash = '#/'; });
+$('#toEdit').addEventListener('click', () => { location.hash = '#/s/' + currentId + '/edit'; });
+$('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId; });
+
+function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id)); }
+function route() {
+  if (anim) stopAnim();
+  draft = null; drag = null; disarmDel();
+  const m = location.hash.match(/^#\/s\/([^/]+)(\/edit)?$/), sys = m && store.get(m[1]);
+  if (!sys) { currentId = null; showView('home'); renderHome(); document.title = 'Coach'; return; }
+  if (currentId !== sys.id) {
+    currentId = sys.id; state = JSON.parse(JSON.stringify(sys.data)); undoStack = []; state.cur = 0;
+  }
+  mode = m[2] ? 'edit' : 'view';
+  if (mode === 'view') { sel = null; }
+  $('#board').dataset.mode = mode;
+  $('#sysTitle').textContent = sys.name; $('#sysName').value = sys.name; document.title = sys.name + ' · Coach';
+  showView('board'); renderAll();
+}
+window.addEventListener('hashchange', route);
+store.load();
+route();
 })();
 </script>
 </body>
