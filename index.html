@@ -64,8 +64,11 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
    les commandes sont dessous et se rejoignent en faisant défiler. */
 #board{overflow-y:auto;-webkit-overflow-scrolling:touch}
 #board main{flex:1 0 auto}
-#court{height:auto;max-height:calc(100vh - var(--hdr,56px) - var(--tb,0px) - 16px);
-  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - var(--hdr,56px) - var(--tb,0px) - 16px)}
+#court{height:auto;max-height:calc(100vh - var(--hdr,56px) - var(--tb,0px) - var(--below,0px) - 16px);
+  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - var(--hdr,56px) - var(--tb,0px) - var(--below,0px) - 16px)}
+/* lecture : terrain un peu réduit pour garder Lecture et le choix d'option visibles sans défiler */
+#board[data-mode="view"] .fork:not([hidden]){display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:8px 14px}
+#board[data-mode="view"] .fork p{margin:0;font-size:1rem}
 #board[data-mode="view"] #court{touch-action:pan-y}
 .tools{position:sticky;top:0;align-self:start;max-height:100vh;max-height:100dvh;z-index:2;
   background:linear-gradient(rgba(8,33,53,.06),rgba(8,33,53,.06)),var(--embt-cream)}
@@ -1215,6 +1218,8 @@ function fitCourt() {
   const b = $('#board'), mobile = matchMedia('(max-width:720px)').matches;
   b.style.setProperty('--hdr', b.querySelector('header').offsetHeight + 'px');
   b.style.setProperty('--tb', mobile && mode === 'edit' ? b.querySelector('.tools').offsetHeight + 'px' : '0px');
+  // lecture : place pour la barre Lecture, la ligne d'aide et le choix d'option (réservée même quand il est masqué)
+  b.style.setProperty('--below', mode === 'view' ? (b.querySelector('.steps').offsetHeight + $('#status').offsetHeight + 100) + 'px' : '0px');
 }
 if (window.ResizeObserver) new ResizeObserver(fitCourt).observe($('#board header'));
 window.addEventListener('resize', fitCourt);
