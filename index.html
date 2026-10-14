@@ -90,7 +90,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
 .card{width:100%;text-align:left;border:1px solid var(--line);border-left:5px solid var(--embt-red);border-radius:10px;padding:16px;background:rgba(255,255,255,.55);color:var(--embt-navy);display:flex;flex-direction:column;gap:6px;min-height:100px}
 .card:hover{border-color:var(--embt-navy);border-left-color:var(--embt-red)}
-.card .name{font-family:var(--font-title);font-weight:900;font-size:1.15rem;overflow-wrap:anywhere}
+.card .name{font-family:var(--font-title);font-weight:900;font-size:1.15rem;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .sub{font-weight:600;font-size:.95rem;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card,.tile{align-items:center;justify-content:center;text-align:center}
+.card{min-height:84px}
 .card .meta{font-size:.85rem}
 .empty{text-align:center;padding:40px 10px}
 a.hbtn{text-decoration:none;display:inline-block}
@@ -108,7 +111,7 @@ a.hbtn{text-decoration:none;display:inline-block}
 .grp .list{margin:12px 0 18px}
 .grp .list[hidden]{display:none}
 .home-body h2 + .list{margin-bottom:26px}
-.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.menu{display:grid;grid-template-columns:1fr;gap:14px}
 .tile{display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:120px;padding:20px;border:1px solid var(--line);border-left:6px solid var(--embt-red);border-radius:12px;background:rgba(255,255,255,.55);color:var(--embt-navy);text-decoration:none}
 .tile:hover{border-color:var(--embt-navy);border-left-color:var(--embt-red)}
 .tile-t{font-family:var(--font-title);font-weight:900;font-size:1.35rem}
@@ -171,10 +174,10 @@ a.hbtn{text-decoration:none;display:inline-block}
   </header>
   <div class="home-body">
     <nav class="menu" aria-label="Menu principal">
-      <a class="tile" href="#/equipes"><span class="tile-t">Équipes</span><span class="tile-s" id="cntTeam"></span></a>
+      <a class="tile soon" href="#/seances"><span class="tile-t">Séances</span><span class="tile-s">Bientôt</span></a>
       <a class="tile" href="#/systemes"><span class="tile-t">Systèmes et principes</span><span class="tile-s" id="cntSystem"></span></a>
       <a class="tile" href="#/exercices"><span class="tile-t">Exercices</span><span class="tile-s" id="cntExercise"></span></a>
-      <a class="tile soon" href="#/seances"><span class="tile-t">Séances</span><span class="tile-s">Bientôt</span></a>
+      <a class="tile" href="#/equipes"><span class="tile-t">Équipes</span><span class="tile-s" id="cntTeam"></span></a>
     </nav>
   </div>
 </section>
@@ -1019,11 +1022,8 @@ function renderMenu() {
 
 /* Listes : systèmes et principes / exercices, groupés par catégorie */
 let libKind = 'system';
-function docCard(d, label) {
-  const data = migrate(JSON.parse(JSON.stringify(d.data))), nOpt = leavesOf(data).length;
-  let nStep = 0; for (let id = data.root; id && data.nodes[id]; id = data.nodes[id].children[0]) nStep++;
-  return `<li><button class="card" data-open="${d.id}"><span class="name">${esc(label)}</span>
-    <span class="meta">${COURT_NAME[data.court] || ''} · ${nOpt > 1 ? nOpt + ' options' : plural(nStep, 'étape')} · modifié le ${new Date(d.updatedAt).toLocaleDateString('fr-FR')}</span></button></li>`;
+function docCard(d, [title, sub]) {          // titre sur une ligne, puis une ligne secondaire s'il y en a une
+  return `<li><button class="card" data-open="${d.id}"><span class="name">${esc(title)}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</button></li>`;
 }
 /* Tri par catégorie ou par équipe ; groupes repliés, un seul déplié à la fois.
    Le libellé n'affiche pas ce qui est déjà donné par le groupe. */
@@ -1041,16 +1041,17 @@ function renderLib() {
     groups = store.list('team').sort(byName).map(t => ({ k: t.id, label: t.name }));
     if (items.some(d => !teamLabel(d.teamId))) groups.push({ k: '', label: 'Sans équipe' });
     inGroup = (d, g) => (g.k ? d.teamId === g.k : !teamLabel(d.teamId));
-    label = d => [catOf(d) && catOf(d).short, d.name].filter(Boolean).join(' - ') || 'Sans nom';
+    label = d => [(catOf(d) && catOf(d).short) || 'À classer', d.name];                  // catégorie / nom
   } else {
     groups = CATS[libKind].map(c => ({ k: c.k, label: c.label }));
     if (items.some(d => !catOf(d))) groups.push({ k: '', label: 'À classer' });
     inGroup = (d, g) => (g.k ? d.category === g.k : !catOf(d));
-    label = d => [d.name, d.kind === 'system' ? teamLabel(d.teamId) : ''].filter(Boolean).join(' - ') || 'Sans nom';
+    label = d => [d.name || 'Sans nom', d.kind === 'system' ? teamLabel(d.teamId) : ''];  // nom / équipe
   }
   const open = openGroup[libKind];
   $('#libList').innerHTML = items.length ? groups.map(g => {
-    const its = items.filter(d => inGroup(d, g)).sort((a, b) => label(a).localeCompare(label(b), 'fr'));
+    const cmp = (x, y) => (x || '').localeCompare(y || '', 'fr');
+    const its = items.filter(d => inGroup(d, g)).sort((a, b) => { const la = label(a), lb = label(b); return cmp(la[0], lb[0]) || cmp(la[1], lb[1]); });
     const key = (byTeam ? 't:' : 'c:') + g.k, isOpen = open === key && its.length > 0;
     return `<section class="grp"><button class="grp-h" data-grp="${key}" aria-expanded="${isOpen}" ${its.length ? '' : 'disabled'}>
       <span class="chev">▸</span><span class="lbl">${esc(g.label)}</span><span class="cnt">${its.length}</span></button>
