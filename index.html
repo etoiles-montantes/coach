@@ -154,7 +154,10 @@ a.hbtn{text-decoration:none;display:inline-block}
 .field textarea{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--embt-navy);width:100%;resize:vertical}
 .h2-meta{letter-spacing:0;text-transform:none;font-weight:600;font-size:.9rem;margin-left:6px}
 .home-body h2.mt{margin-top:30px}
-.att-help{margin:-6px 0 12px;font-size:.85rem}
+.att-help{margin:12px 0;font-size:.85rem;line-height:1.5}
+.ttl{display:flex;flex-direction:column;margin-right:auto;min-width:0}
+.ttl h1{margin:0}
+.ttl small{font-weight:600;font-size:.95rem;opacity:.9}
 .att{display:flex;flex-direction:column}
 .arow{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;min-height:48px;border-bottom:1px solid var(--line)}
 .st{border:0;border-radius:999px;padding:7px 14px;min-width:150px;font-weight:800;font-size:.85rem;color:#fff}
@@ -168,6 +171,19 @@ a.hbtn{text-decoration:none;display:inline-block}
 .item-d{font-weight:800;background:var(--embt-navy);color:var(--embt-cream);border-radius:6px;padding:2px 8px;font-size:.85rem}
 .item-x{margin:0;white-space:pre-line;font-size:.92rem}
 .item-act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.schemas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:12px;margin-top:4px;align-items:start}
+.schema{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:8px;background:var(--embt-cream);padding:6px;color:var(--embt-navy);text-align:left;cursor:pointer}
+.schema:hover{border-color:var(--embt-navy)}
+.schema svg{width:100%;height:auto;display:block;border-radius:4px}
+.schema .cap{font-weight:800;font-size:.88rem;line-height:1.35}
+.schema .cap small{font-weight:600;opacity:.75}
+.schema.gone{cursor:default;opacity:.6;padding:14px;text-align:center}
+.refs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-weight:600}
+.refs li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 6px 6px 10px}
+.refs li span.n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addref{display:grid;grid-template-columns:auto 1fr auto;gap:6px}
+.addref select{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;color:var(--embt-navy);min-width:0}
+@media (max-width:720px){.addref{grid-template-columns:1fr}}
 @media (max-width:720px){.arow{grid-template-columns:52px 1fr auto;gap:8px}.st{min-width:0;padding:6px 10px;font-size:.78rem}}
 @media (max-width:720px){.prow{grid-template-columns:1fr 1fr 64px 40px}.prow.edit{grid-template-columns:1fr 1fr}.prow.edit .posbtns,.prow.edit .rowact{grid-column:1 / -1}.prow.edit .rowact{justify-content:flex-end}}
 .name-input{font-family:var(--font-title);font-weight:900;font-size:1.15rem;background:transparent;color:var(--bar-text);border:0;border-bottom:2px solid rgba(243,242,237,.5);padding:4px 2px;min-width:0;flex:1 1 160px;max-width:380px;margin-right:auto}
@@ -254,17 +270,19 @@ a.hbtn{text-decoration:none;display:inline-block}
 <section class="view" id="session">
   <header>
     <a class="hbtn" href="#/seances">‹ Séances</a>
-    <h1 id="sessTitle"></h1>
+    <div class="ttl"><h1 id="sessTitle"></h1><small id="sessTeam"></small></div>
     <button class="hbtn" id="sessInfo">✎ Infos</button>
     <button class="hbtn" id="delSess">Supprimer</button>
   </header>
   <div class="home-body">
-    <h2>Présences <span class="h2-meta" id="attSum"></span></h2>
-    <p class="att-help">Touche un statut pour le changer : présent → en retard → absent → absence injustifiée.</p>
-    <div class="att" id="attList"></div>
-    <h2 class="mt">Exercices <span class="h2-meta" id="itemSum"></span></h2>
+    <button class="grp-h" id="attToggle" aria-expanded="false" aria-controls="attBody"><span class="chev">▸</span><span class="lbl" id="attLbl">Présences</span></button>
+    <div id="attBody" hidden>
+      <p class="att-help"><b id="attSum"></b><br>Touche un statut pour le changer : présent → en retard → absent → absence injustifiée.</p>
+      <div class="att" id="attList"></div>
+    </div>
+    <h2 class="mt">Blocs d’entraînement <span class="h2-meta" id="itemSum"></span></h2>
     <ol class="items" id="itemList"></ol>
-    <button class="btn primary" id="addItem">+ Ajouter un exercice</button>
+    <button class="btn primary" id="addItem">+ Ajouter un bloc</button>
   </div>
 </section>
 <section class="view" id="board" data-mode="view">
@@ -356,15 +374,17 @@ a.hbtn{text-decoration:none;display:inline-block}
 </div>
 <div class="modal" id="itemDialog" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="itTitle">
-    <h2 id="itTitle">Ajouter un exercice</h2>
-    <label class="field">Type<select id="iType">
-      <option value="exercise">Exercice existant</option>
-      <option value="system">Système ou principe existant</option>
-      <option value="free">Texte libre (sans schéma)</option>
-    </select></label>
-    <label class="field" id="iRefRow">Élément<select id="iRef"></select></label>
-    <label class="field" id="iFreeRow" hidden>Intitulé<input id="iFree" maxlength="80" autocomplete="off"></label>
+    <h2 id="itTitle">Nouveau bloc d’entraînement</h2>
+    <label class="field">Titre<input id="iTitle" maxlength="80" autocomplete="off"></label>
     <label class="field"><span>Durée <span class="hint">(minutes)</span></span><input id="iDur" type="number" min="1" max="300" inputmode="numeric"></label>
+    <div class="field"><span>Schémas <span class="hint">(facultatif, un ou plusieurs)</span></span>
+      <ul class="refs" id="iRefs"></ul>
+      <div class="addref">
+        <select id="iType" aria-label="Type de schéma"><option value="exercise">Exercice</option><option value="system">Système ou principe</option></select>
+        <select id="iRef" aria-label="Schéma à ajouter"></select>
+        <button type="button" class="btn" id="iAddRef">+ Ajouter</button>
+      </div>
+    </div>
     <label class="field"><span>Description <span class="hint">(facultatif)</span></span><textarea id="iDesc" rows="3"></textarea></label>
     <label class="field"><span>Objectifs <span class="hint">(facultatif)</span></span><textarea id="iObj" rows="2"></textarea></label>
     <p class="err" id="iErr" role="alert"></p>
@@ -1292,7 +1312,7 @@ function disarmTeam() { clearTimeout(delTeamArmed); delTeamArmed = 0; $('#delTea
 $('#toHome').addEventListener('click', () => { const d = store.get(currentId); location.hash = backTo || (d ? KIND[d.kind].list : '#/'); });
 
 /* ---------- Séances : équipe + date, présences, exercices ---------- */
-let sessId = null, backTo = null, sessDlgId = undefined, itemDlg = null;
+let sessId = null, backTo = null, sessDlgId = undefined, itemDlg = null, attOpen = false, autoPlay = false;   // présences repliées par défaut
 const STATUS = [['present', 'Présent'], ['late', 'En retard'], ['absent', 'Absent'], ['unexcused', 'Absence injustifiée']];
 const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 function closeSessDialogs() { $('#sessDialog').hidden = true; $('#itemDialog').hidden = true; itemDlg = null; sessDlgId = undefined; }
@@ -1300,7 +1320,7 @@ function renderSessions() {
   const ss = store.list('session').sort((a, b) => (b.data.date || '').localeCompare(a.data.date || '') || b.updatedAt - a.updatedAt);
   $('#sessEmpty').hidden = ss.length > 0; document.title = 'Séances · Coach EMBT';
   $('#sessList').innerHTML = ss.map(d => `<li><button class="card" data-sess="${d.id}"><span class="name">${esc(fmtDate(d.data.date, true) || 'Séance')}</span>
-    <span class="sub">${esc(teamLabel(d.teamId) || 'Équipe supprimée')} · ${plural((d.data.items || []).length, 'exercice')}</span></button></li>`).join('');
+    <span class="sub">${esc(teamLabel(d.teamId) || 'Équipe supprimée')} · ${plural((d.data.items || []).length, 'bloc')}</span></button></li>`).join('');
 }
 $('#sessList').addEventListener('click', e => { const b = e.target.closest('[data-sess]'); if (b) location.hash = '#/seance/' + b.dataset.sess; });
 
@@ -1334,31 +1354,59 @@ $('#newSess').addEventListener('click', () => openSessDialog(null));
 $('#sessInfo').addEventListener('click', () => openSessDialog(sessId));
 
 function editSess(fn) { const d = store.get(sessId); if (d) { fn(d); store.put(d); } }
-function itemTitle(it) {
-  if (it.type === 'free') return { t: it.title || 'Sans intitulé', k: '' };
-  const ref = store.get(it.refId);
-  return { t: ref ? fullName(ref) : 'Élément supprimé', k: it.type === 'system' ? 'Système' : 'Exercice', ok: !!ref };
+/* Blocs d'entraînement : titre, durée, description, objectifs et 0..n schémas (exercices ou systèmes).
+   Ancien format (un exercice par élément) converti à la volée. */
+function blockOf(it) {
+  if (Array.isArray(it.refs)) return it;
+  const b = { id: it.id, title: it.title || '', duration: it.duration, description: it.description || '', objectives: it.objectives || '', refs: it.refId ? [it.refId] : [] };
+  if (!b.title && it.refId && store.get(it.refId)) b.title = fullName(store.get(it.refId));
+  return b;
+}
+/* Miniature d'un schéma : première étape (joueurs + flèches), sans toucher au tableau ouvert. */
+function schemaSVG(doc) {
+  const keepState = state, keepPath = path;
+  try {
+    state = migrate(JSON.parse(JSON.stringify(doc.data))); state.choice = state.choice || {}; state.cur = 0; recomputePath();
+    const F = derive()[0], c = COURT_IMG[state.court] || COURT_IMG.half;
+    let h = '';                                          // point de départ seulement : joueurs et ballon, sans flèches
+    for (const pl of state.players) if (F.pos[pl.id]) h += playerSVG(pl, F.pos[pl.id], false);
+    if (F.ball && F.pos[F.ball]) h += ballSVG({ x: F.pos[F.ball].x + 0.38, y: F.pos[F.ball].y - 0.38 });
+    const meta = leavesOf(state).length > 1 ? plural(leavesOf(state).length, 'option') : plural(path.length, 'étape');
+    return { meta, svg: `<svg viewBox="${c.x} ${c.y} ${c.w} ${c.h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><image href="${c.src}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" preserveAspectRatio="none"/><g${state.court === 'full' ? ` transform="${FULL_ROT}"` : ''}>${h}</g></svg>` };
+  } finally { state = keepState; path = keepPath; }
+}
+function schemaCard(id) {
+  const doc = store.get(id);
+  if (!doc) return '<div class="schema gone">Schéma supprimé</div>';
+  const m = schemaSVG(doc);
+  return `<button class="schema" data-view="${id}" aria-label="Ouvrir ${esc(fullName(doc))}">${m.svg}
+    <span class="cap"><span class="item-k">${doc.kind === 'system' ? 'Système' : 'Exercice'}</span> ${esc(fullName(doc))} <small>· ${m.meta}</small></span></button>`;
 }
 function renderSession() {
   const d = store.get(sessId); if (!d) return;
-  const team = store.get(d.teamId), att = d.data.attendance || (d.data.attendance = {}), items = d.data.items || (d.data.items = []);
-  $('#sessTitle').textContent = `Séance du ${fmtDate(d.data.date, true)}${team ? ' - ' + team.name : ''}`; document.title = fullName(d) + ' · Coach EMBT';
+  const team = store.get(d.teamId), att = d.data.attendance || (d.data.attendance = {}), items = (d.data.items || (d.data.items = [])).map(blockOf);
+  const dt = new Date(d.data.date + 'T12:00:00'), sameYear = dt.getFullYear() === new Date().getFullYear();
+  $('#sessTitle').textContent = 'Séance du ' + dt.toLocaleDateString('fr-FR', sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' });
+  $('#sessTeam').textContent = team ? team.name : 'Équipe supprimée'; document.title = fullName(d) + ' · Coach EMBT';
   const ps = team ? (team.data.players || []).slice().sort(byPoste) : [];
   const counts = {}; ps.forEach(p => { const st = att[p.id] || 'present'; counts[st] = (counts[st] || 0) + 1; });
-  $('#attSum').textContent = ps.length ? '· ' + STATUS.filter(([k]) => counts[k]).map(([k, l]) => `${counts[k]} ${k === 'unexcused' ? 'injustifiée' + (counts[k] > 1 ? 's' : '') : l.toLowerCase() + (counts[k] > 1 && k !== 'late' ? 's' : '')}`).join(' · ') : '';
+  $('#attLbl').textContent = `Présences (${(counts.present || 0) + (counts.late || 0)})`;   // présents = présents + en retard
+  $('#attToggle').setAttribute('aria-expanded', attOpen); $('#attBody').hidden = !attOpen;
+  $('#attSum').textContent = ps.length ? STATUS.filter(([k]) => counts[k]).map(([k, l]) => `${counts[k]} ${k === 'unexcused' ? 'injustifiée' + (counts[k] > 1 ? 's' : '') : l.toLowerCase() + (counts[k] > 1 && k !== 'late' ? 's' : '')}`).join(' · ') : '';
   $('#attList').innerHTML = ps.length ? ps.map(p => { const st = att[p.id] || 'present', lbl = STATUS.find(x => x[0] === st)[1];
     return `<div class="arow"><span class="badges">${posBadges(posOf(p))}</span><span>${esc([p.lastName, p.firstName].filter(Boolean).join(' ') || 'Sans nom')}</span>
       <button class="st st-${st}" data-att="${p.id}" aria-label="${esc(p.firstName || '')} ${esc(p.lastName || '')} : ${lbl}. Toucher pour changer.">${lbl}</button></div>`; }).join('')
     : `<p>${team ? 'Aucun joueur dans cette équipe : ajoute-les depuis le menu Équipes.' : 'L’équipe de cette séance a été supprimée.'}</p>`;
   const total = items.reduce((n, it) => n + (+it.duration || 0), 0);
-  $('#itemSum').textContent = items.length ? `· ${plural(items.length, 'exercice')} · ${total} min` : '';
-  $('#itemList').innerHTML = items.map((it, i) => { const h = itemTitle(it);
-    return `<li class="item" data-item="${it.id}"><div class="item-main">${h.k ? `<span class="item-k">${h.k}</span>` : ''}<span class="item-t">${esc(h.t)}</span><span class="item-d">${+it.duration || 0} min</span></div>
+  $('#itemSum').textContent = items.length ? `· ${plural(items.length, 'bloc')} · ${total} min` : '';
+  $('#itemList').innerHTML = items.map((it, i) => `<li class="item" data-item="${it.id}">
+      <div class="item-main"><span class="item-t">${esc(it.title || 'Sans titre')}</span><span class="item-d">${+it.duration || 0} min</span></div>
       ${it.description ? `<p class="item-x"><b>Description :</b> ${esc(it.description)}</p>` : ''}${it.objectives ? `<p class="item-x"><b>Objectifs :</b> ${esc(it.objectives)}</p>` : ''}
-      <div class="item-act">${h.ok ? '<button class="btn" data-iview>▶ Voir</button>' : ''}
-        <button class="icon" data-iup aria-label="Monter" ${i ? '' : 'disabled'}>↑</button><button class="icon" data-idown aria-label="Descendre" ${i < items.length - 1 ? '' : 'disabled'}>↓</button>
-        <button class="icon" data-iedit aria-label="Modifier">✎</button><button class="icon" data-idel aria-label="Retirer">×</button></div></li>`; }).join('');
+      ${it.refs.length ? `<div class="schemas">${it.refs.map(schemaCard).join('')}</div>` : ''}
+      <div class="item-act"><button class="icon" data-iup aria-label="Monter" ${i ? '' : 'disabled'}>↑</button><button class="icon" data-idown aria-label="Descendre" ${i < items.length - 1 ? '' : 'disabled'}>↓</button>
+        <button class="icon" data-iedit aria-label="Modifier">✎</button><button class="icon" data-idel aria-label="Retirer">×</button></div></li>`).join('');
 }
+$('#attToggle').addEventListener('click', () => { attOpen = !attOpen; renderSession(); });
 $('#attList').addEventListener('click', e => {
   const b = e.target.closest('[data-att]'); if (!b) return;
   editSess(d => { const cur = d.data.attendance[b.dataset.att] || 'present', i = STATUS.findIndex(x => x[0] === cur);
@@ -1366,43 +1414,49 @@ $('#attList').addEventListener('click', e => {
   renderSession();
 });
 $('#itemList').addEventListener('click', e => {
+  const v = e.target.closest('[data-view]'); if (v) { backTo = location.hash; autoPlay = true; location.hash = '#/s/' + v.dataset.view; return; }
   const li = e.target.closest('[data-item]'); if (!li) return;
-  const d = store.get(sessId), i = d.data.items.findIndex(x => x.id === li.dataset.item), it = d.data.items[i];
-  if (e.target.closest('[data-iview]')) { backTo = location.hash; location.hash = '#/s/' + it.refId; return; }
-  if (e.target.closest('[data-iedit]')) return openItemDialog(it);
+  const d = store.get(sessId), i = d.data.items.findIndex(x => x.id === li.dataset.item);
+  if (e.target.closest('[data-iedit]')) return openItemDialog(blockOf(d.data.items[i]));
   if (e.target.closest('[data-idel]')) editSess(x => x.data.items.splice(i, 1));
   const mv = e.target.closest('[data-iup]') ? -1 : e.target.closest('[data-idown]') ? 1 : 0;
   if (mv) editSess(x => { const [m] = x.data.items.splice(i, 1); x.data.items.splice(i + mv, 0, m); });
   renderSession();
 });
 
-function fillRefs(type, keep) {                         // éléments existants, groupés par catégorie
+/* Fenêtre du bloc */
+function fillRefs(type) {                               // schémas existants, groupés par catégorie
   const docs = store.list(type);
   $('#iRef').innerHTML = docs.length ? [...CATS[type], { k: null, label: 'À classer' }].map(c => {
     const its = docs.filter(d => (c.k ? d.category === c.k : !catOf(d))).sort(byName);
     return its.length ? `<optgroup label="${esc(c.label)}">${its.map(d => `<option value="${d.id}">${esc(fullName(d))}</option>`).join('')}</optgroup>` : '';
   }).join('') : `<option value="">Aucun ${type === 'system' ? 'système' : 'exercice'} pour l’instant</option>`;
-  if (keep && docs.some(d => d.id === keep)) $('#iRef').value = keep;
+  $('#iAddRef').disabled = !docs.length;
 }
-function syncItemType() { const free = $('#iType').value === 'free'; $('#iRefRow').hidden = free; $('#iFreeRow').hidden = !free; if (!free) fillRefs($('#iType').value, $('#iRef').value); }
+function renderRefChips() {
+  $('#iRefs').innerHTML = itemDlg.refs.map((id, i) => { const d = store.get(id);
+    return `<li><span class="item-k">${d && d.kind === 'system' ? 'Système' : 'Exercice'}</span><span class="n">${esc(d ? fullName(d) : 'Schéma supprimé')}</span>
+      <button type="button" class="icon" data-rmref="${i}" aria-label="Retirer ce schéma">×</button></li>`; }).join('');
+}
 function openItemDialog(it) {
-  itemDlg = { id: it ? it.id : null };
-  $('#itTitle').textContent = it ? 'Modifier l’exercice' : 'Ajouter un exercice'; $('#iOk').textContent = it ? 'Enregistrer' : 'Ajouter';
-  $('#iType').value = it ? it.type : 'exercise'; $('#iFree').value = it ? it.title || '' : '';
-  $('#iDur').value = it ? it.duration : ''; $('#iDesc').value = it ? it.description || '' : ''; $('#iObj').value = it ? it.objectives || '' : '';
-  $('#iErr').textContent = ''; syncItemType(); if (it && it.refId) fillRefs(it.type, it.refId);
-  $('#itemDialog').hidden = false; $('#iType').focus();
+  itemDlg = { id: it ? it.id : null, refs: it ? it.refs.slice() : [] };
+  $('#itTitle').textContent = it ? 'Modifier le bloc' : 'Nouveau bloc d’entraînement'; $('#iOk').textContent = it ? 'Enregistrer' : 'Ajouter';
+  $('#iTitle').value = it ? it.title || '' : ''; $('#iDur').value = it ? it.duration : '';
+  $('#iDesc').value = it ? it.description || '' : ''; $('#iObj').value = it ? it.objectives || '' : '';
+  $('#iErr').textContent = ''; $('#iType').value = 'exercise'; fillRefs('exercise'); renderRefChips();
+  $('#itemDialog').hidden = false; $('#iTitle').focus();
 }
-$('#iType').addEventListener('change', syncItemType);
+$('#iType').addEventListener('change', () => fillRefs($('#iType').value));
+$('#iAddRef').addEventListener('click', () => { const id = $('#iRef').value; if (id && !itemDlg.refs.includes(id)) { itemDlg.refs.push(id); renderRefChips(); } });
+$('#iRefs').addEventListener('click', e => { const b = e.target.closest('[data-rmref]'); if (b) { itemDlg.refs.splice(+b.dataset.rmref, 1); renderRefChips(); } });
 $('#iCancel').addEventListener('click', closeSessDialogs);
 $('#itemDialog').addEventListener('click', e => { if (e.target.id === 'itemDialog') closeSessDialogs(); });
 $('#addItem').addEventListener('click', () => openItemDialog(null));
 $('#iOk').addEventListener('click', () => {
-  const err = m => { $('#iErr').textContent = m; }, type = $('#iType').value, dur = parseInt($('#iDur').value, 10);
-  const it = { id: itemDlg.id || newId(), type, duration: dur, description: $('#iDesc').value.trim(), objectives: $('#iObj').value.trim() };
-  if (type === 'free') { it.title = $('#iFree').value.trim(); if (!it.title) return err('Donne un intitulé.'); }
-  else { it.refId = $('#iRef').value; if (!it.refId) return err('Choisis un élément existant.'); }
+  const err = m => { $('#iErr').textContent = m; }, title = $('#iTitle').value.trim(), dur = parseInt($('#iDur').value, 10);
+  if (!title) return err('Donne un titre au bloc.');
   if (!(dur > 0)) return err('La durée est obligatoire (en minutes).');
+  const it = { id: itemDlg.id || newId(), title, duration: dur, description: $('#iDesc').value.trim(), objectives: $('#iObj').value.trim(), refs: itemDlg.refs.slice() };
   editSess(d => { const i = d.data.items.findIndex(x => x.id === it.id); if (i >= 0) d.data.items[i] = it; else d.data.items.push(it); });
   closeSessDialogs(); renderSession();
 });
@@ -1505,7 +1559,7 @@ function route() {
   if (t && t.kind === 'team') { if (teamId !== t.id) editPid = null; teamId = t.id; showView('team'); return renderTeam(); }
   if (h === '#/seances') { showView('sessions'); return renderSessions(); }
   const se = (m = h.match(/^#\/seance\/([^/]+)$/)) && store.get(m[1]);
-  if (se && se.kind === 'session') { sessId = se.id; showView('session'); return renderSession(); }
+  if (se && se.kind === 'session') { if (sessId !== se.id) attOpen = false; sessId = se.id; showView('session'); return renderSession(); }
   showView('home'); renderMenu(); document.title = 'Coach · EMBT';
 }
 function openBoard(sys, edit) {
@@ -1519,6 +1573,7 @@ function openBoard(sys, edit) {
   $('#toHome').textContent = backTo ? '‹ Séance' : KIND[sys.kind].back;
   $('#sysTitle').textContent = fullName(sys); document.title = fullName(sys) + ' · Coach EMBT';
   showView('board'); fitCourt(); renderAll();
+  if (autoPlay) { autoPlay = false; if (mode === 'view') setTimeout(() => { if (!anim) $('#play').click(); }, 350); }   // ouvert depuis une séance : lecture directe
 }
 window.addEventListener('hashchange', route);
 store.load();
