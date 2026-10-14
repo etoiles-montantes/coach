@@ -93,6 +93,32 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .card .name{font-family:var(--font-title);font-weight:900;font-size:1.15rem;overflow-wrap:anywhere}
 .card .meta{font-size:.85rem}
 .empty{text-align:center;padding:40px 10px}
+a.hbtn{text-decoration:none;display:inline-block}
+.home-body h2 + .list{margin-bottom:26px}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.tile{display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:120px;padding:20px;border:1px solid var(--line);border-left:6px solid var(--embt-red);border-radius:12px;background:rgba(255,255,255,.55);color:var(--embt-navy);text-decoration:none}
+.tile:hover{border-color:var(--embt-navy);border-left-color:var(--embt-red)}
+.tile-t{font-family:var(--font-title);font-weight:900;font-size:1.35rem}
+.tile-s{font-size:.9rem}
+.tile.soon{opacity:.55}
+.roster{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.prow{display:grid;grid-template-columns:1fr 1fr 160px 40px;gap:8px;align-items:center}
+.prow.head{font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.prow input,.prow select,.field input,.field select{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--embt-navy);width:100%;min-width:0}
+.icon{border:1px solid var(--line);background:var(--embt-cream);color:var(--embt-navy);border-radius:999px;width:36px;height:36px;font-size:1.1rem;line-height:1}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(8,33,53,.55);display:flex;align-items:center;justify-content:center;padding:12px}
+.modal[hidden]{display:none}
+.sheet{background:var(--embt-cream);color:var(--embt-navy);border-radius:14px;border-top:5px solid var(--embt-gold);padding:20px;width:min(520px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.sheet h2{font-family:var(--font-title);font-weight:900;font-size:1.3rem;margin:0}
+.field{display:flex;flex-direction:column;gap:5px;font-weight:700}
+.field[hidden],.chk[hidden]{display:none}
+.hint{font-weight:400;opacity:.75}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600}
+.chk input{width:18px;height:18px}
+.preview{margin:0;font-size:.9rem}
+.err{margin:0;min-height:1.2em;color:var(--embt-red);font-weight:700}
+.actions{display:flex;justify-content:flex-end;gap:8px}
+@media (max-width:720px){.prow{grid-template-columns:1fr 1fr 40px}.prow select{grid-column:1 / 3}.prow.head{display:none}}
 .name-input{font-family:var(--font-title);font-weight:900;font-size:1.15rem;background:transparent;color:var(--bar-text);border:0;border-bottom:2px solid rgba(243,242,237,.5);padding:4px 2px;min-width:0;flex:1 1 160px;max-width:380px;margin-right:auto}
 .name-input:focus{outline:none;border-bottom-color:var(--embt-gold)}
 #board h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -115,20 +141,60 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
   <header>
     <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIMAAACDCAYAAACunahmAAAq9klEQVR4nO2dd5hdVb2/37V2O/3MmT6ZtElPSEjoIB1pAiH0gFQREAKoKFV/UryCKIJeRUBQ8KqAYAGpKl2KdAyQRhqZtMn0OXXXtX5/TJBQhHv13swEz/s8+0nOmTV7f9dnffYqe6+1BqpUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqnzTsZPYuIc19hjqOKkNPTW70FJ1obnt+qAMZasyhDmCokXbimEjYKMvaDjCAaKhjGirkUAcw1FjJ7LmTp22FZSdMaVonDHU8VYaOWHLCVO/3Dz+ht9nlM9qpaXp6qAOqMlQYxhHGyDbdXfD0f911n86MmhQB8aEOq8oQIFtGLtz9qOO052m9umODTo+apIVh7TnUcQ0V/9Z9BsNJTD75uGOQFY+m2hzjx40nmW24dqjjqrK5keaJqakzdX+xpIPuslZuWf/k9t/oupGTi0MdWpXNTLKh9ZlRO+2lo4rWd3/z+zq/Yb3uyLs62ThWA3sNdXxDwb9rM2E5idxOX7/wQiSw6MGHeO2uu8jETNomTCaea75yqAMcCv4tzSCEMSUqR+bsPXehsnIl5tvLWPr7e4kZmmM/exwiN2L7oY5xKPh3MoMphMgh5V6pxhF3j54wluaaGuY/+AC2grVvLkP3ljn16IPxQmUTy1yGkBOBFCCGOvjNwSf9cbQlTGdvO1ZzbjLWtHcCI16IlWRZBsw75/MIX/Hcb35LWhrEMXn29t+z69knkskYBInJlzv++st14AZ+mM6XB3p+oiqFX6P1G0Odqf8rPomOFyBHxjO1l8fTjadYKDmiJmDmZMFWEzT9iU/xvTteZuWLL1BfUly74/bUuCEmNsUZM/jyn27h27/8NVf9x7e58st7smHJsyxbFPLKmog8cfpdvSHo6fo2buEngDvUmf3f5BNVM0gpR2ez4x9OmumpycR6sd/esNO2mvp0Ee0GGFGaq27/E0mnlcZ0ioU/+wmJ0CcgwhQxCm+txO1az3GzD+fqb1xNWncwfbrP7MkpfCdiVamF2+5f1fSKrvmBMMd+t9S19paw0nshUB7qvP9v8EnpM8TNTPPva8c0rWoasWLa50+KxPe+kuPo7YpM1l00FQVJrw6tR9K1vsS8009HCMFjv74LWyu0JQiUJlsJWPfyfMY0NFNXM53f3fs4UrpEYR5BH+Njb3DVXM3dF7cyZ1vPzjUkz64ds1VRms6xfAJq2S3eDEI6R2Tr9yw0JPzDv3xMhv88p419x3dRI7uI+4JABhBksFyXxX2aDjGBL3/h84higWhVBwoQURJTecRVyH1XXw8qYv+D9uP1jrEIux4zIdCRg1QWpl8ip1Zx2n7wky/Hmb1tQcTTqTtjIyauAzJDrce/wpZsBtPM1P+uvrX+d5+auNC49dKt2X2sTyr00K5CoNACPFNTFi5WyuSpV1YQRCkytubFn9+OFWhCw6RTOnTHLUIzoLKuH6EirvyPsxgQzby1ykCFeUwdoAT4hkEgAkzVT6PRy+cOSvO9r0xmQrrSXDtypz5M58ChFuafZUs1g+M0bLWsPpk64isntnLBKSEN4YukPI2vTTxHY0YOGAOYkUUoS3QHcZ56ppdvXfxVZFBixW8eAgw8bJ4p9TOfCM/yMX2LFb+4l1TMxh1o54k37Q9cXAiB1hopJfHyemal53PjV1rYc5uyFKNHPiQymRs3vyT/OlugGURtff3IDSNrO8dce85Ydh9fQFYKqDBFGFrYFEmKAkYk0LKE0AY4kjXlDE56Bocesgs6dFn7tzexLBu0SW8qRcGKowxFLDB55ZY7MIXL8aedyB9fKRNYde+JwDAMALTWCMBSaSx3GWfO2cBZn3ZFYzp7ZiLbeu/m1+ZfY0szQ01d646rmhrd7HfObmNqbCF2vhdhNFFwLHyngBMKUqUMWkAoJaaSBCrBA0+vJZ5sYMyoZtpfeIl03EapELQk0AInMtGRIiFgw9IlyHwf/+9L5+NFCdrzjZimiZSDckXRuzPjPKko2Da+bqCh4HHmjAIXHpkilkzPidfUPjxUQv0zbElmsGtzrSsaUm+lvjFvJq3WCrT00RtHx0IW0OYACoOALEpGhCIGRESqjr8t9dlz7+0QCm6/5JuooAJRgG9EhEaEE2ks7RCWewltj/YX3mRsTS21Kc0fXiji+8FgTSDeO2jQOgWygGFsQIS1SL+G7SaFfGluRDobHmgmnduGQKt/ii3FDMJpmPZ6pt7NXX7WeEbyGmak6I1DxfZxIkXajRPzY7i2SzHeR2CEhMQBRWdnRO+AzTe+8UWUipALV2NqjakjfDPENxVKRBhYmHZExQp57Ps/QYZw1KF78NzCMkpLoihEItl0FGmJPGlPEvctyvFOViUL+JQ5oK3EUbN3J9eUPUVY1nlDptz/gC3CDDJe9+O4EU6++JRZjBbrcQJJXmrsIIZUFoEQeIaBTxx0DCU0UprEA0XR9vnjwgqp5rG01Tey+q77iccTRJbEMDRx3yIyKsQ9BzP0KFmSXClO1wuvo5XLYSeeTnnAYW1xGyyRJ1nOQpTFMwNsFWFENq50KFsOSqdJhTFiShNpOGPsCvbfrpnkuEnXAROHWsePY9ibQQhrm5HN6bPOnWszIfsWtnIRWhCPQhztYqsyFmVMXcakjK0qxKMAy5XEdBxtTOGZVzs4bPYBBOUKD916KynDxpYmngpRtkEkQyqOQiMQGEgENgblRQvYdfp00rkcDy5YykDCxE2UCK0CoelTMSyUAJMypi5hKRdHVbB1GYMypdhK5u5nMCK1isTYqS8zzB9MDXczmIn6Wc/Wxtew34wOcqqTCAffsLDCOEIZDC51eO9hRAYWAVILlrVnKYUtXDTvVEzDpXvhYirFEsqPMG0LAp96L8LWHkoMjg4UYNuSmy77JqaGnbfbgdded9HROKQXUuMG1JQlCS+BESY+NAaQ2AraCgv4wYm7EPMKGcPJ/mJIVPxvMqzNYMRS/w+5IH7xl/Yk5YVYXh2htAlND7AIZYxQOoTSQYnBI5QOkTBxLY+KafLCggFCK8Xo5gban3+ZeKSQCQepNPghdT7sY9YyVdtowNw4UIjCMl3z3yTyQr797StY2WuwMt9Av21RjoFva4oJD9cyUMIhkhsPMXgoESNUjZStDDFzGccfVotqqD8BRMtQavpRbE4zfPht/I+PulTjmMtOmDOajOyiHLTiGqMIsAm1hSttfOL4JPFJ4pLCJYVPkoJRy/KwiXViHK8u7+OIow5AKIOnfnArMR3gA1pIJIKEFzE5r2h2PUAgAakVAmhSgs5n/srYlizNyYilS7rJRwa+yhLqBL6McKWNSwqP5HsPnUKFLQwwCk3IwdsmaMl0Yufq7vontNgszcvmuYhhHZUZOenXGgFao5TCME3Q701nECGI0EoRagMlpWFbRSqhQWgmkLJM3AeUTWB5aP2ul9/JiAYkPhnZj6rYDLhJHnr8dnZv24HvjN+GJgboM2PUeFAxIeUP/qZvaDxLk/AsAgnaDIgJk5FHHMp+N1zL3LOu48EH78FiOYmwFkSZwHRxZQotor9nRWwSUdxPIPAQwsVXMVw5AmHGsGUxElHvB8TXaFQYEI8nybshpu0glI8dlFT32pV1QOF/sVg+wObq0MTsmua/xGtH7DBpyhSuuvJSVCgQaAwitNJoKRj0ikIIIFKAJBV4mE6aTooo2UcirMcMUiizBEKABi1gU2eFwiDSNlJJHAd226aF9U8u4DdHHU+ObrrtBuJhQCAjnAiksnBNBSiygY8nTSpSkhMW85XPtasX0+d7vLR0NZHOEwubMHREYLkI5WDoCKkH2xctNEpAJEAJSUyX8UhSVjEaZBEte+mXNvGwBqEHC0BoUEKgAMM0KLs+fYUy884+F0I3Kq1fdm7ku//nj7g3Z+9WCjtxeqpl/E1tY8fwyAO/oTYVwwxdtAoQZpzIjxDSQtry3bIVerBHpzQYgkgMtm0iBDYaCPRguk2rGi03JrIghJ/MOZLgxZdI+/2sj01lQyKPCgL6DEE5qsUJKgjHZLLfS62ZJe9JGmN9rCn1c+5Df6V2pymD19KDBkTrjY3sRgm1ZjBQPWhSIUCJwZ/LwbteACj1TsYGD6VASpTnE5oS3zC5/49P8OUvnodXGtgw0NG+C+iV/4fl8neGYKgjJiabRr8gzVju57f8mP332QtRKXHdsSdRWbyUEaHGcD3KliBvG4RSogVIpUmEGjsafBNZtDVOKBBaIjQYWiA3/l8h0TIkHRbxyCCUpM508bRDuwx51a9hidyALxR+1mRAZ8h43aDqiPkR2TDOto5kD70WFUWsM0aQVh6BoQkMgdACY6PvIqEIjJDAUCgJZmgRCy2cwKAr04upFCnfxA5NImFSNg0iqYmrCgO2RV/cYd/PncLcc8/F1YpTzvwSv7/3PmyCu8t9nScAwWYrmc11ofdhJeua7zSTtUfu8+l9uf3G7xH3Ap654Ub++qMfUlt2EVriSQutTbTQRAaYCuxosBQCQ6OFh9CDnT60jUagtUSIEC0CyrKRROBh606663I8GSZZGOaJxwz22TXGwTNHImzBeT9+hl1nTOLTuzsUSwP8/ul1vLLcoaVcz946xSQ/xAn60GgCQxFKgUZiKEnCdzCUJDQClPTQMkQQYSiN1CawsdlAooRBJI3BSswM8UY0cex119LyqV1YvHo1+8+eS77QGxY7Vx0chcGfN3ehDO1DEGkenmqdeFc8mbUeefBuZoxqoutvL3H9F84is7ZAvWuiYw5eFBBoQacV4tkGza7FyAFNIV3YWGUrEBItJa7WSKEIRYy8rKcpXEFv0uJ22cramM9ndi5w8q6NxMVi7IEiYWokn72hg52nTuHM3deR8/OIKM0ya1suv2sFG94uslsmw075iITrEZMaz1AEQmJHErVRwphvYGqBLyUFW1B2BBXPIWMZWG4JO6oQNwRaSFwJ2d134eQbbkRnUvzwl7/mksu/g3ZLK9ze5dsCA0NSHENx0b+jwnuKqxc3FTtXL9pzjwP57k9vp2a7Xbns0b/SuPve9BsWWkjQEjfh8ESpk5/TyfU1RW4bY/BWvIaueD0FJ4dPAuULElhYykaGaeqjLgLL58mSwZIoRsaoMGfWWOrzqzF8he+MwieLGUnGlNupK1uUZT2+GdDmLuDzO4whJMNf8ykWYxDZGeKBRdKDWAh2BI4qYsgBSilNe22GF7I5HozV8MvA5s6gm1elh7Id0tpBK5O1QnHwNf/ByXf+il5LsPOcuXz96mu12/v2d9ze5eMZIiPAUNcMm5BI115vZFvOnrH1Njx8181kpGTJg/dw+7zzGGtl6PVCypkMK4RmsV+iMwxxMWkUFhOkxQQhaFIhZqVIXEpsP6IvHfGYmWFBWOCYI3bk57+7j0/NauTa2SPpcJcTyhqieJLjbmznmHGSuXsZRMSQWpOPj+bYa/7KxLqtGFMZ4LVOmzlWLZPzRaRRwbU0WgsKZoY1ts2KwGOVXyZUEVklGBlLMM7SjBCSWL6A5Th0ZhN87ZEH0XU5nl+2koNmH4Xvh0W/Y+newMtDXQbD5glkudB7TmH94m2fX7Rcj5u6F/PfLtN81CFc/OrLrEpIkk6BUb0D7NcpOKUU5wSR4hA7Rb0RsjDs5IniajrjAiktHGXhOSHd2Rgvxz1mbSfYf8obnDx3Fk8sVNxd7iWIlzB9Fy1M7AgKdoxQ1mAaFgNpi2vu7iUR5bjgNMkZp9VhxQd43nBYm8oTmWUEMbS2+IsOeLg8QHtQYIIpOMy2mRuT7KaLTCl0UF+ooJw44+bO5tI3X0W2tjDvsiuZPecIyuWw0+9Y2sAwMAIMIzMAoPWA0hUxaVQv++69DRf/v2uJjWjkitdeJbXfYQRZgz7bx7clY/01bFcu8GlMDk/UcnBiBKPzGjsSlKyQSizJ8q4sqr+fM/ffikb6OWSrXibFfO65v4gd1ZC0fMAjVW7EihRWVCGpOqkUAhYuXMdRewnGyjeoVSGHzU6wNGjHSzuIKE6mEifn+kwTmmPsDGfIWg6ObMapkEQQknQjhG/RnlEcdedt7Pvd71H0Ohk3cyp33fUHxjRamKlkA8No7cXwMoOQW+d0P5ecPZJTj7D4w09vZNpu+7ImdDnxpp+wzy03s74lJKIT06tFC58at8yEvMfEAZd0pUJoawpGmaLv0u7Xsd20OixWst5PUQy72eVTY1jR3kCvyNBn+ZTtAFfUUjZyuJZkILJYumgaUjWz337j8ComfinHbm3TSEaSjn6TUKcIkBhaMskNmd5boqW/QNJ3CZVCmxYqNFHbzOBrz71Ey27bcMMf76du+oHEg06+Ny/BQbuPwhZFASSHWvZ3GFZmEJhtjbZJprycT8/0ufriHSn1LWHK9Bnc//TztO6/F19/5gGsaePoj43GUQYYIT22x5ragA1Z8PBJaQs3lWRtagM7butjswQnVSIb+By4Uw4R9dDbnyCyy0gdYdOHabYTyH6UY7LorT5SsRKmO0BMJLBSq8gZyxgxosyGKKBoOfTEQvrjCt8u05NxWV0f0OtEGJFBbyDY/mtf5own/4yqT3L8WefztXO/yU7jI675ymRm1iyjzlqHLT2AxFDr/g7DakWVaVr1hnKwfRtTr6U5+RQ/+OJYfvXHgOPnHs/hcw7nxpu/y7yHn+Iv37uOl398I8LTxJIxKqGHgSYRSWwfCgnJgK1IxXdk3UCMglVDPPTwRQJlaF5akGPnbT+FF2UIxBJKbi1reydgmiFv9LxJ/XSD9T2jKZZG4Ke6cO0YlRGKvvUByigQCyISnkXJjjBMgVX0EXaCQn0N8+7+BfUzJvPCquUcfuTpiO63ufSwNPtvVcLNryYw4tQYLmEUgRD24NPLoWfYjCYArHjymolt486/aZ7EidoJrALKrKGST7G4vYXv39uFSjbx6AO3MaatldKri7j5c+eQWd1FKlJEUhFJiVTwRsbkv0QziaAT31rHgNlEYFawS3G8WA1JtYq4WwdGLwOpGpJhM8lynkD00mNkiJIVavo7Sfk1VBISp1JLV1ow1lecSTuxUJAZGE9oVlCyQoggs+t2HPPzG6jUZ7n+Z7/ksqu+xVbp9Vxx4lSaU2uoeJ0kjFpEOcn8fJpz7ypQXLl6DEq1D7X2MMxqBiV0UNIlAltjlw3syigsEZCID7DN1CLfGjuCq/9rITseeDRfPf8izjv9GM5/4k/cd/Z5LH/iLxhCDM5ViiS+zpAWJS74wmhy2RKJUhNS9lFO57jg2iKz921kh5lZRJDhyptWs/PMRg7ZWRCoFq6+dSlNLVM5/aSxmNYa+o042VBz22O99LzcgCUaKTr9FGs3kAgN+qw4c675BlPnzqGr6HPknGN4a/ESPj+rwGEHboeuLEGFIQ51VIRGZYrovjoCbYHS6uOV2TwMqz6DCqKeIEgRmgVqXBNFSE9qgJI2sF2DiXIt/3lmM0ds08cNV1zAoYecTV8sxmG338T211xBp8zgBCG1aj11ooAMXPr7O2m1BaMSK2jNrcGrSSI8wa6NKcaJRYyP+yirgm2sY3Ssj9Hm29S3KTrblzMltZC2WIm2xFqStb3I9hRpkWcgWSBbyVIXOKwam+K8J+5nxhHH8OgLi5mw4wGsWfwnrjrR49h9LOL+UhISQi0I5eB7DRlBXhUhtAHtD7Xu7zCszIBSKysVH8wcQRggjMEOmaksTGVjqpC00cXRe+a46KRJrF/+X8ycugNPPr+AvY47iMuffJRi61Q2xHPEkNR5Ic8sLKJDj7jZj1cJef259SA6yeVCRCCQaIS2kEpBIDHsMntt3Ub/QJxCspko6idWjGGUmnlzoEydY5Mrh3QKTe0xh/LdJ14hMaGNcy6/kM8efRi7N6/jR+fNojWtETpEECKEQguBFhv7Btqgoixsy4JhtIJ7WJlBK/W6Bjp6YkS2CVphhYNzGiMhCaRJ6PaT1SvZtnkF11w0lbZsJyedeCwXfOcqrLYcFzz7MOaUrbHDiDbDZP6CMmGqlUIUUlGjef7xbsaNrZBIdiJEHLTCCJMYWiFRSBu2qZNIK8bv5pfwBFgqx/N/CyhZJq12nLQnOPuWG/nMdd+kxy/TOml7bvvVzZw42+SSY2oY4a8lTh9CfPg21BqLt9e5RCrSwLDZXW5YmQF0l5KRWtuVwLNB6QjQhDKgYkHZjBGZWWQEKZWntrCcr89r5fDPjOSGW+7lT8+9DqpCd9c6EipkrBmjIYxz48PdrHem8VrPKFZ32Rw9eywWeUxpoIVCaxuJwjBKBH6SZlli3JgCt9yzlKKcRiFWzz0vdzIpdMj5Ll4ixtrFS8COc+Ax8/DcdfznV3dh9iwLHbYTmANYaIR+t38upURtnMsQCYdF7WXc/p4FQyT0hzK8zKBVOVChu/jtwTkLpjE4lyQ0fULDJ5QGQZQiIksoHNKhSdZcTHNtAUPl2HuXrVDFdpwNHRhuSKMtmaojnn3W54U1Y7nq1r/SNjHNqGwfdmAidJlIqsGXYUSEwsOIHGxcvnraeBJGjlseKnLzfa/T3eGxtzRJ+QX6heLRX/4ax9MccOABZByfcbE+kn4HkWlRkjGkdN6TtSAIMAwDrTWhsmjvFkgdbfbX1B/F8DIDBEGltGzxijKRaSKEwohM7EjiRC7x0MNSEUoofDOiIDSFUpannlpMMmthSINHb7yNljCNaSaQXi9T4w5T3RQ/+9krZLJjuPgLk6i3B0j4OYQuoYUglBGhBFQKKQfwzIBk/jXOPeEQHl6YZ/4bMfZQOZq9AUzKOK7A7OkH1+XCs+fieQneWCWILEk89El6MZRUKPHuQOGdZXlCCBAOPSWbsFx4dGhk/nCGmxmIKqWbVq7OU3ANNBortLEiQSzSOMrHxEPioaWLdjTEZ/D8AsU1112BVEVev+dxjDCGpyGmQmw/4oB0DZNkA6pc4uUXHqdSdvDCDMI0USLCFAMoYRAKB5MSnhEjEjU89Kf7kGaGNmsqO2gHGRQxDZOkMjAKRV646XoM20LZJve+toayHknSF6RYTUQMsBEatAhRQmIpiWUYLF1XACsNfuWpodZ7U4adGXSl9CffzrG6exQ+GoSPxiAQMXzpoDAwlEHcj5H0YP7ydgqpGRyy626EXSVEZxelRIiWAbafwNI2tfkB5gYeU2SM7z/QyHk/zXPfMo9VA1tTNkaTDEp4VgvdTj1L+mdx66OCk28ssm59nBNKcHh+LQkKGGTwohjlWETWhqfvfpC4EHzrwit5cYnCM/vwaEKrLJFRRmFiKolv96NMh4wHUQB3PDdAUCosZBiNJGCYPXTayIpooLDuD491jJh6YhpLF1HahHd65kKgtUAJKEnJ/U90MG70GLIJh2W/fATbqcEodmNJA18q7FAzkNHU9FY4WNQwqibDwjUb+ENnFzfJXqKaGCqcSO/TfTz+tECFUOfa7CXamGVIalUBJQvEfZOiLXFtRbbo0+WY+D09yLV5TjjpCL787UtZ21VLXXoVZqCQygLhAQYxP0EUlXFNSdFuY+mat/Dz3b8cUpU/hGFXMwD4hd7r5q+yyRsjiaRGC41mcGseiNBSE0noszK81VHPacccDDrg3utuoFwJMa2Qoj04bT0TaJyyR9xRpPwC2/d28Vldw2zqmZ2YyDZ+M9MiwVSl2DdMc4ys4aiYwyyjjK376Dd9euM2BUcQDyRCSVTMwvJ8kmWXxY//kVjMIZdt4Z4/91CJuQQGSARIF4XAClLEdMAAgscWlCmrZpRbvGWodX4/w9MMQd+NgVUXPvxcJ67MoaSJ1qB0iBCCIAxR0mH+GpOKquUrZ56OrpQRXX3ETBtlCAIlGXAc1iQtLCS9pk8+HhAYPpZjMd7tYq/epRyxoYNTgiJHlAN2dtuZ6q+gLlhGkg3EtEe24pCtpOhNO6yzBWnXBmWSwMQSEb+9+UfgBpx20im88bZBQefwDAmRQmpNKBVC21jSphBr5XdPrMEdqMwHeoZa5/czLM0AlAt97Q898vQAhagBpQ2kMLENm9APMa0EITGeei2ioSmNbdo8e+MNOIbCCSq4gcQSGV7F52G3i7wTxzcMDK0wfQPh1xAJQVn69EqBM2EMldoWYqIFHeVwZCPxcpJMxUIyWKDdAxXuDbvolAZ2aFOyLUKtqSxdjtKCzx1zCHlls6ajCU+aGAZYkYUyAiIJro6ztLuGDQMN+P1rjh5qgT+M4WoGgnzPaUV/NC/N78G04ghpgRZIaROGglDbvPSG4rRTD6ZSFrz429+DpYjjEcTSvGUIXjQjsukR2L5NQ9HCDiVRvB/FAJHlsDpy2OeiKznhkXs489VHCLeZQElJgryilEzSXiMoOi7psEKLkSOfTXOv00+HNbhGw0IyQpmsefgRRo9sJFmf4ZlnSwTaQKkQM4wRGh6+GVLSSX5021/wfetvaLV0qPX9MIatGYCuvq7l37/pnnbawzq0yBOPYlgk8W3NovYirpXmtONOwsj3sHrtKiIZUV+S9JpxnvLK5LRgx8gkV/ZQKAwRUV+xKcS6eTMT8cWnHmGneXPZUFKYiSQn/fnH7Hb5Gbhxi6BQwhFgGRrMkMYwYB9qWZyyeTqeIF6pIRH4WJHk5988n1D5nHDAwTy9pB1bNiDMBJFUJEMLZYQ8viSgV4/F7VoyZ6iF/UcMZzMQeP0XmjVTwuvvXEKUyBJFJUwCArPMk69E1NfU0JCrof0vjzFCxrE8WJ+M8xQlKnGb2UGS1mI//QmXfge0LyiqNO7M8fzg9RXUTZ3G9396K63Td2bCzG1Yt1ax01lf4Zy/Pcv6ZECiGBEPkwyYBiVZYlYp5IBimhe9As/VWQRmDKlN4v2dECguv+SrFCybZavV4MQVo0KkTPr98fzqwXXku8vPwPCYu/BhDGszAOH6FW/s++ayNI+9mcR1kgiRJ9Tw0ltZTj/8KHyhePRHN9Pab2FHcR7Kad6IymxvWOR0BWm6xKTE0Ek2xGvY40eXctGDT5DXNnsechpXfP/riLRPwV/HzB0P5tof3YkzIsnVb79C9jNz6SSNoQr4CQPDG2B2STHJgnvUBpYmc7jKwvGSLLz/z8iUwDFH8udFBVKGBiWoZEfxvTs2UApHBlGxY6+hFvSjGO5mAPRTFbf8m+vvWM/q4tZUSNHVX8+GIMHxxx+J7u+hsOhtiAQ9jsnLhS5miRo+FQg0RaT2UZGku62Fr778BJOPOJJHF6xn8oyprFx0N5edvwdNTon9t5nBkftJrr/262y/+2wKdoa5P7+aw665nP5EAqsiwNFoBjjYi9PsS16olKmk0tRYdbTfcTeWCJh7xKk8sahMyYtR0WO4+7EC87tMutev3Jlh/td0twAzgJvvPtb1x6y5+qZlrFWT+NOziqbxSdramln96DNkpUVvPGKd5dGGzUFBhmQlT40n6DZijD71eC59+mFiI2r50te/yWEHH83Mpg5+eMF0pmTeot4rUlcpcdqOXZx9ygjW5dsZO2NP/vjUs4w/Yne+8tyTxCZMpN8SBPjURQH7yCxObz9lPPIDZZY+/SiyVOHE4w6mFKRYOtDIS2/X8MCjRfIda66A6NWh1vHj2CLMAKhizxvT1gZ2/spfv83zi1MctM/ORErx9A9/ASiEATkbPh3L0FLM49uK9toER/32Vxx4+WWU1xaYufv23PSbW8lYcMkXdqZBLSYVFTAiG232okPBdiMX89XDahEDiiPOupR5V15BrLmW0x+5j+mfO5GKaVGJCUbqiM801JJxK/hGhEWJ3ueWsONW46jN5LjtyTLf/e3r9OX931KpXD7UAv532FLMAFDYsPaNrRZ2Z0o9Xo6vzTsf6Ya4C1YRCk3KDRhR9BlRdOm1i4QzR3PJXx9nzM67c+dDT9L26V3wu9dw5P67IMw8bmkFUilC1UDZyFKMdxMTYKLJmAlqwz5OObSRu391E9N3/iLL+rrZ84qLOPaXN1MrYySViyx30Ko0RtJE2hEPfe9noEIO3GM3XlmfpC9K/KVc6j52qIX777IlmQFgjblh3c8bnBJNdTneeugRehIVpKrgSIHvRayLW2x98ZeY98dHoLaOI8+5iPO/eCZHTOnklovbaE6twVYetrawpIkWIRIfM0riaokRCNyon+5EnqMn9fLTeROoLfyWmfvsw+0PvErr7vtz6ot3oz41lijdQj8V4m4Fw6tnzbLXCAouXznnSxiBS9Cx5hiGeT9hU7Y0MwijtvakOcfNQdoGb/3ibmq1RFgOXXGb4phWzv7D3ew572zefGs1k2buyiN/fpl99qnn6INipMolzMAY3FwFsfHfwd1WhJJsXN+P1KCFAW4vrTUlLjxnH2KqwNkXXMixZ5xBIdPKOXc8yB4Xn0+nZRJaDiYWtjtAzysvM3ncKGzHwEpmLxlivf5HbFlmEKKlInTq+KMOQ5crrHjyaexI02NKjJ124JKXnyOz3XT+8+772W/Pvcmll5EyiiTNLrJWP2algP0Pb1SNkh5ojdAmRAYJQ2HQicNq0lGZthafV/52Jy1b78Pf2jew3YlHceGf/szaWJyCVMR1wCO3/gzciL333xcnldlimgjY0szgOF9vSNSIHaZsxbJHnyFMxWk3Qo78znc4+447cIVilzlz+cal53Pi/pJvnDOapNdOMoghwziRLKJk6R+eXstwcG8obWBpCSpABwNEUQ8xK2JqboBrz5rO9HQPe356T7584w2YW03kyoWv0DZ7XwpSseL5lzCV5PyTTsSyE01CiLGbT6B/jS3KDMma5sM/O/twKGoe//kv6Rhdx+UvPMuEgw7gjTVrSLVMZOWiFZz9uTkc9OkcomSiK4O7tXqhSzHUIGP/8PxCy3e2jiMU4IYR5UDjRiaBADvwqHdLXHbmQWy3VRM/vO4GJh14OEVbM+em6zn1Rz+mTwuWPf8is8aMI4xA2onjNpM8/zJbkhnqrViq5cjjjyJ0AnJbt3HNs0+hRzRyxhXfZpf95uCY1mrHFNx55z1c+N03+fMLOcLaBspWAt/MYCdy+ME/WlEoNk5IEYP7MlngKQNt1SPirRSlRRcT+MUjIWde+UP+tnwlll3PhmXL/YZJW/Hwi6/SuN8BXPXoEzz//NM4WYNDDzuUTNPoszerSv8CW4wZ7ETmm7FEjMlbjSOIWRxz6QW83V9k8i57cO8DD+vyuiVHlbvbv+6HHquXt09ctLbthbse76BD9fHM/A4ee9Gk068lNB0EEZ6IUzaS+DKGlh6RlHgihSdq8KSD5weUnTEs667njvsWMeAbPLuoyO/eMNTqbuOKvpXdOyftJMX2N+uDrq5njj75VD573gUkxjRz/CVfJbQ0J514LG4QtDDM1rRu8SSax68/7KSztKu09pTWN/7qtzoxcQedGzNpBdAIIE3n5Poxkzdd0lyTGjk1H2uZtCo1ZoaXHjVVZ8dto0dOnqR32b5BH3pgiz7syGl61MS03m7nifrYw0br/fdr1RNnturkyNG6dvIOOjFmlo41TVmbHD09cFK5nwI2gDDMaZkxMzQbl9RL0zm5ZvSUYNK2u+ml7Wt1OVK64od69OSZ2oqnvrW59fok05hpm6X+8sZyXfCVPvKEU3V29FRtZmp/umkiaTon58ZM29QMZnbU1AGZyF608fNEmWy9Pj5izyidbn4km21ZlW2cUqwd+ymdbd0xamxp601mGxfEcy1P14yaHmGYBwA1AMmRU7vtRPr6d048aIbpfzfDRlqc2hFr6sdO1T+9/Te6HCl90GfP0LGGscP2TeUWh7Ti59qjZuon5q/QbdO20/UjxxWFYe3zgXQfZobWCQNmPH3R378xzFNpHekzuEE3APGRbRuIxa56N42zQ93Y7UM2mTCcHDWt24p/rBkALCORublu7FR9+Cln6T88t0Cnxm+vgew/r8DmYTjOjv4AVrbp6mw2w+xD5xANdMyv9Hftzodtqi1AfmDfC42UmzTZWpG1bAY2accNXyAR8p0lLwZKqui9Wy1prRHyvU2/EB/a5Qqicv6Mnvbybx75o/vAE8++ahumg3BSR2uv+NMP+4XhwpbQgXRSyXi8ONCnyhve/lqlv2sW/2h39Xc2CP1IBDJ67z0gFYhIvieNEB+zS68GrT7iWip8pNixsqHcs+41v1Iknq657GMCG3K2BDNkCIMN5dVvjlNu4dsfmVIQvv9u1Uj0e7IpCd93h0emhzY2rVIEUlsfHZVAi8E/bfhRe/Dk/d7V27obll0OOvzoEw49W4IZunrWLmsBVn1cQhV4v+5uX7jVpt9JId+3OYpG6/c281qb6OhdgyjAF++vPUK0erfcdRQuya9asAdQ+bi4tFe6oty9tu3j0g01W4IZ/idEwMJNv1BR8MFMivfepPKd7f///nPQ4r1NgPHBG1tpHT39L8Q67PikmeH9KKGVCj23992vNJL3FrT+kEdC70+jAq+korD7/yLI4cIWMZr4F1ADHW/XwXtL1vjQjt+7TYDQ6gM1QaF7Xdv7z/NJ45NeM8D7C1AD+qNHClorTPGBcv9EGwH+PczwPnSfVBFsWhVo2FQKrXWg/Mp701T5xFK76YdE0+gN0kpd/VFp/h34N6wZAOjd9ENMaATR+2uBXqr8+yGk3BHIDHUcVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVKlSpUqVapUqVLlf4P/D3azNHUS0ewxAAAAAElFTkSuQmCC" alt="Emblème EMBT"><div><h1>Coach</h1><small>Étoiles Montantes du Basket Toulousain</small></div></div>
     <button class="hbtn" id="driveBtn" hidden></button>
-    <button class="hbtn primary" id="newSys">+ Nouveau système</button>
   </header>
   <div class="home-body">
-    <h2>Mes systèmes</h2>
-    <ul class="list" id="list"></ul>
-    <p class="empty" id="empty">Aucun système pour l’instant. Crée le premier avec « + Nouveau système ».</p>
+    <nav class="menu" aria-label="Menu principal">
+      <a class="tile" href="#/equipes"><span class="tile-t">Équipes</span><span class="tile-s" id="cntTeam"></span></a>
+      <a class="tile" href="#/systemes"><span class="tile-t">Systèmes et principes</span><span class="tile-s" id="cntSystem"></span></a>
+      <a class="tile" href="#/exercices"><span class="tile-t">Exercices</span><span class="tile-s" id="cntExercise"></span></a>
+      <a class="tile soon" href="#/seances"><span class="tile-t">Séances</span><span class="tile-s">Bientôt</span></a>
+    </nav>
   </div>
+</section>
+<section class="view" id="lib">
+  <header>
+    <a class="hbtn" href="#/">‹ Accueil</a>
+    <h1 id="libTitle"></h1>
+    <button class="hbtn primary" id="newDoc">+ Nouveau</button>
+  </header>
+  <div class="home-body">
+    <div id="libList"></div>
+    <p class="empty" id="libEmpty">Rien pour l’instant. Crée le premier avec « + Nouveau ».</p>
+  </div>
+</section>
+<section class="view" id="teams">
+  <header>
+    <a class="hbtn" href="#/">‹ Accueil</a>
+    <h1>Équipes</h1>
+    <button class="hbtn primary" id="newTeam">+ Nouvelle équipe</button>
+  </header>
+  <div class="home-body">
+    <ul class="list" id="teamList"></ul>
+    <p class="empty" id="teamEmpty">Aucune équipe pour l’instant. Crée la première avec « + Nouvelle équipe ».</p>
+  </div>
+</section>
+<section class="view" id="team">
+  <header>
+    <a class="hbtn" href="#/equipes">‹ Équipes</a>
+    <input class="name-input" id="teamName" aria-label="Nom de l’équipe" maxlength="60">
+    <button class="hbtn" id="delTeam">Supprimer</button>
+  </header>
+  <div class="home-body">
+    <h2>Joueurs</h2>
+    <div class="roster" id="roster"></div>
+    <button class="btn" id="addPlayer">+ Ajouter un joueur</button>
+  </div>
+</section>
+<section class="view" id="soon">
+  <header><a class="hbtn" href="#/">‹ Accueil</a><h1>Séances</h1></header>
+  <div class="home-body"><p class="empty">Cette partie arrive bientôt.</p></div>
 </section>
 <section class="view" id="board" data-mode="view">
   <header>
     <button class="hbtn view-only" id="toHome">‹ Systèmes</button>
     <button class="hbtn edit-only" id="done">✓ Terminé</button>
-    <h1 class="view-only" id="sysTitle"></h1>
-    <input class="name-input edit-only" id="sysName" aria-label="Nom du système" maxlength="80">
+    <h1 id="sysTitle"></h1>
+    <button class="hbtn edit-only" id="editInfo">✎ Infos</button>
     <button class="hbtn view-only" id="exportImg">Exporter en images</button>
     <button class="hbtn primary view-only" id="toEdit">Modifier</button>
     <div class="seg edit-only" role="group" aria-label="Terrain">
@@ -185,6 +251,21 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 </section>
 </div>
 
+<div class="modal" id="docDialog" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <h2 id="dlgTitle">Nouveau système</h2>
+    <label class="field">Catégorie<select id="fCat"></select></label>
+    <label class="chk" id="dupRow" hidden><input type="checkbox" id="fDupOn"> <span id="dupLabel">Dupliquer un existant de cette catégorie</span></label>
+    <label class="field" id="dupPick" hidden>À dupliquer<select id="fDup"></select></label>
+    <label class="field"><span>Nom <span class="hint" id="nameHint">(facultatif)</span></span><input id="fName" maxlength="80" autocomplete="off"></label>
+    <label class="field" id="teamRow">Équipe<select id="fTeam"></select></label>
+    <label class="field" id="newTeamRow" hidden>Nom de la nouvelle équipe<input id="fNewTeam" maxlength="60" autocomplete="off"></label>
+    <p class="preview">Nom complet : <b id="fPreview"></b></p>
+    <p class="err" id="fErr" role="alert"></p>
+    <div class="actions"><button type="button" class="btn" id="fCancel">Annuler</button><button type="button" class="btn primary" id="fOk">Créer</button></div>
+  </div>
+</div>
+
 <script>
 (() => {
 const NAVY = '#082135', RED = '#961321', GOLD = '#C59215', CREAM = '#F3F2ED', R = 0.45, KEY = 'tableau-tactique-v1';
@@ -219,12 +300,13 @@ const store = {
   load() {
     try { const l = JSON.parse(localStorage.getItem(LIB_KEY)); if (l && l.systems) this.lib = l; } catch (e) {}
     this.lib.dirty = this.lib.dirty || {}; this.lib.trash = this.lib.trash || [];
+    for (const d of Object.values(this.lib.systems)) d.kind = d.kind || 'system';   // anciens systèmes
     try { // reprise de l'ancien tableau unique, s'il existe
       const old = JSON.parse(localStorage.getItem(KEY));
-      if (old && old.frames) { this.put({ id: newId(), name: 'Mon premier système', data: old }); localStorage.removeItem(KEY); }
+      if (old && old.frames) { this.put({ id: newId(), kind: 'system', name: 'Mon premier système', data: old }); localStorage.removeItem(KEY); }
     } catch (e) {}
   },
-  list() { return Object.values(this.lib.systems).sort((a, b) => b.updatedAt - a.updatedAt); },
+  list(kind) { return Object.values(this.lib.systems).filter(d => !kind || d.kind === kind).sort((a, b) => b.updatedAt - a.updatedAt); },
   get(id) { return this.lib.systems[id] || null; },
   put(sys) { sys.updatedAt = Date.now(); this.lib.systems[sys.id] = sys; this.lib.dirty[sys.id] = true; this.persist(); drive.push(); },
   remove(id) {
@@ -237,13 +319,13 @@ const store = {
 };
 /* ---------- Google Drive (Google Identity Services + API REST Drive v3) ---------- */
 const GOOGLE_CLIENT_ID = '873875861453-0tlekb1bnrrrf1ctbur43bkqddtuo28s.apps.googleusercontent.com';
-const DRIVE_FOLDER = 'Coach – systèmes';
+const DRIVE_FOLDERS = { system: 'Coach – systèmes', exercise: 'Coach – exercices', team: 'Coach – équipes' };
 const DRIVE_LABEL = {
   unavailable: 'Enregistré sur cet appareil', off: 'Se connecter à Google Drive', connecting: 'Connexion…',
   syncing: 'Synchronisation…', ok: '✓ Drive synchronisé', expired: 'Reconnecter Google Drive', error: 'Erreur Drive · réessayer'
 };
 const drive = {
-  client: null, token: null, exp: 0, folderId: null, status: 'loading', busy: false, again: false, timer: 0,
+  client: null, token: null, exp: 0, folderIds: {}, status: 'loading', busy: false, again: false, timer: 0,
   init() {
     const sc = document.createElement('script');
     sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
@@ -282,26 +364,31 @@ const drive = {
     if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
     const txt = await r.text(); try { return JSON.parse(txt); } catch (e) { return txt; }
   },
-  async folder() {
-    if (this.folderId) return this.folderId;
-    const q = `name='${DRIVE_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  async folder(kind = 'system', create = true) {
+    if (this.folderIds[kind]) return this.folderIds[kind];
+    const name = DRIVE_FOLDERS[kind] || DRIVE_FOLDERS.system;
+    const q = `name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     const r = await this.api('/drive/v3/files?' + new URLSearchParams({ q, fields: 'files(id)', spaces: 'drive' }));
-    if (r.files && r.files.length) return (this.folderId = r.files[0].id);
+    if (r.files && r.files.length) return (this.folderIds[kind] = r.files[0].id);
+    if (!create) return null;
     const c = await this.api('/drive/v3/files?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: DRIVE_FOLDER, mimeType: 'application/vnd.google-apps.folder' }) });
-    return (this.folderId = c.id);
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' }) });
+    return (this.folderIds[kind] = c.id);
   },
   async sync() {
-    const folder = await this.folder();
-    const q = `'${folder}' in parents and trashed=false`;
-    const r = await this.api('/drive/v3/files?' + new URLSearchParams({ q, pageSize: '1000', fields: 'files(id,appProperties)', spaces: 'drive' }));
     const remote = new Map();
-    for (const f of r.files || []) { const cid = f.appProperties && f.appProperties.coachId; if (cid && !store.lib.trash.includes(f.id)) remote.set(cid, f); }
+    for (const kind of Object.keys(DRIVE_FOLDERS)) {
+      const folder = await this.folder(kind, false); if (!folder) continue;
+      const q = `'${folder}' in parents and trashed=false`;
+      const r = await this.api('/drive/v3/files?' + new URLSearchParams({ q, pageSize: '1000', fields: 'files(id,appProperties)', spaces: 'drive' }));
+      for (const f of r.files || []) { const cid = f.appProperties && f.appProperties.coachId; if (cid && !store.lib.trash.includes(f.id)) remote.set(cid, f); }
+    }
     for (const [cid, f] of remote) {          // récupérer ce qui est plus récent sur Drive
       const loc = store.get(cid), rUp = +(f.appProperties.updatedAt || 0);
       if (!loc || (!store.lib.dirty[cid] && rUp > loc.updatedAt)) {
         const c = await this.api(`/drive/v3/files/${f.id}?alt=media`);
-        if (c && c.data && (c.data.frames || c.data.nodes)) store.putRemote({ id: cid, name: c.name || 'Sans nom', updatedAt: c.updatedAt || rUp, data: c.data, driveId: f.id });
+        if (c && c.data) store.putRemote({ id: cid, kind: c.kind || 'system', category: c.category || null, teamId: c.teamId || null,
+          name: c.name || '', updatedAt: c.updatedAt || rUp, data: c.data, driveId: f.id });
       } else if (!loc.driveId) loc.driveId = f.id;
     }
     for (const sys of store.list()) {         // supprimés ailleurs, ou jamais envoyés
@@ -335,10 +422,11 @@ const drive = {
     return this.api('/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body });
   },
   async upload(sys) {
-    const meta = { name: sys.name + '.json', mimeType: 'application/json', appProperties: { coachId: sys.id, updatedAt: String(sys.updatedAt) } };
-    if (!sys.driveId) meta.parents = [await this.folder()];
+    const meta = { name: fullName(sys).replace(/[\\/]/g, '-') + '.json', mimeType: 'application/json', appProperties: { coachId: sys.id, updatedAt: String(sys.updatedAt) } };
+    if (!sys.driveId) meta.parents = [await this.folder(sys.kind)];
     const b = 'coach' + Math.random().toString(36).slice(2);
-    const content = JSON.stringify({ app: 'coach', version: 1, id: sys.id, name: sys.name, updatedAt: sys.updatedAt, data: sys.data });
+    const content = JSON.stringify({ app: 'coach', version: 2, id: sys.id, kind: sys.kind, category: sys.category || null, teamId: sys.teamId || null,
+      name: sys.name || '', updatedAt: sys.updatedAt, data: sys.data });
     const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${b}--`;
     const path = sys.driveId ? `/upload/drive/v3/files/${sys.driveId}?uploadType=multipart&fields=id` : '/upload/drive/v3/files?uploadType=multipart&fields=id';
     try { return await this.api(path, { method: sys.driveId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body }); }
@@ -352,12 +440,12 @@ function updateDriveBtn() {
 }
 function onDriveSynced() {
   if (pendingExport) { pendingExport = false; exportImages(); }
-  if ($('#home').classList.contains('active')) return renderHome();
+  if (!$('#board').classList.contains('active')) return refreshView();
   if (!currentId || mode === 'edit' || anim) return;
   const sys = store.get(currentId);
   if (!sys) { location.hash = '#/'; return; }
   const cur = state.cur, choice = state.choice; state = migrate(JSON.parse(JSON.stringify(sys.data))); state.choice = choice || state.choice; state.cur = cur; recomputePath();
-  $('#sysTitle').textContent = sys.name; renderAll();
+  $('#sysTitle').textContent = fullName(sys); renderAll();
 }
 
 /* ---------- arbre d'étapes : tronc commun puis options ----------
@@ -704,17 +792,14 @@ document.querySelectorAll('[data-court]').forEach(b => b.addEventListener('click
   save(); renderAll();
 }));
 $('#undo').addEventListener('click', undo);
-$('#sysName').addEventListener('input', e => {
-  const sys = store.get(currentId); if (!sys) return;
-  sys.name = e.target.value.trim() || 'Sans nom'; store.put(sys);
-});
 let delArmed = 0;
 $('#delSys').addEventListener('click', () => {
   if (!delArmed) {
     $('#delSys').textContent = 'Confirmer ?'; $('#delSys').classList.add('primary');
     delArmed = setTimeout(disarmDel, 3000); return;
   }
-  disarmDel(); store.remove(currentId); currentId = null; location.hash = '#/';
+  const kind = (store.get(currentId) || {}).kind || 'system';
+  disarmDel(); store.remove(currentId); currentId = null; location.hash = KIND[kind].list;
 });
 function disarmDel() { clearTimeout(delArmed); delArmed = 0; $('#delSys').textContent = 'Supprimer'; $('#delSys').classList.remove('primary'); }
 function cancelPlay() { if (!anim) return; const k = anim.k; stopAnim(); if (mode === 'view') state.cur = k; }
@@ -864,24 +949,170 @@ document.addEventListener('keydown', e => {
 /* ---------- écrans : accueil, lecture, édition (navigation par #) ---------- */
 const COURT_NAME = { half: 'Demi-terrain', full: 'Terrain entier' };
 function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-function renderHome() {
-  const items = store.list();
-  $('#empty').hidden = items.length > 0;
-  $('#list').innerHTML = items.map(sys => {
-    const data = migrate(JSON.parse(JSON.stringify(sys.data))), nOpt = leavesOf(data).length;
-    let nStep = 0; for (let id = data.root; id && data.nodes[id]; id = data.nodes[id].children[0]) nStep++;
-    const d = new Date(sys.updatedAt).toLocaleDateString('fr-FR');
-    return `<li><button class="card" data-open="${sys.id}"><span class="name">${esc(sys.name)}</span>
-      <span class="meta">${COURT_NAME[sys.data.court] || ''} · ${nOpt > 1 ? nOpt + ' options' : nStep + ' étape' + (nStep > 1 ? 's' : '')} · modifié le ${d}</span></button></li>`;
+/* Types de documents, catégories et nom complet */
+const CATS = {
+  system: [['pj-tt', 'Principes de jeu tout terrain'], ['pj-dt', 'Principes de jeu demi terrain'], ['transition', 'Système de transition'],
+    ['sys-dt', 'Système demi-terrain'], ['press', 'Attaque de zone press'], ['zone', 'Attaque de zone'], ['touche-fond', 'Touche fond'],
+    ['touche-cote', 'Touche côté']].map(([k, label]) => ({ k, label, short: label })),
+  exercise: [{ k: 'echauffement', label: 'Échauffement', short: 'Échauffement' }, { k: 'fi', label: 'Fondamentaux individuels', short: 'FI' },
+    { k: 'preco', label: 'Pré collectif', short: 'Pré co' }, { k: 'collectif', label: 'Collectif', short: 'Collectif' }]
+};
+const FULL_COURT_CATS = new Set(['pj-tt', 'transition', 'press']);   // terrain entier par défaut
+const KIND = {
+  system: { list: '#/systemes', title: 'Systèmes et principes', newTitle: 'Nouveau système ou principe', back: '‹ Systèmes', dup: 'Dupliquer un système existant de cette catégorie' },
+  exercise: { list: '#/exercices', title: 'Exercices', newTitle: 'Nouvel exercice', back: '‹ Exercices', dup: 'Dupliquer un exercice existant de cette catégorie' }
+};
+const POSTES = ['Meneur', 'Arrière', 'Ailier', 'Ailier fort', 'Pivot'];
+const catOf = d => (CATS[d.kind] || []).find(c => c.k === d.category);
+const teamLabel = id => { const t = id && store.get(id); return t && t.kind === 'team' ? t.name : ''; };
+function nameParts(kind, category, name, team) {
+  const c = (CATS[kind] || []).find(x => x.k === category);
+  return [c && c.short, name, kind === 'system' ? team : ''].filter(Boolean).join(' - ');
+}
+function fullName(d) { return d.kind === 'team' ? d.name : (nameParts(d.kind, d.category, d.name, teamLabel(d.teamId)) || 'Sans nom'); }
+const byName = (a, b) => fullName(a).localeCompare(fullName(b), 'fr');
+const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+
+function refreshView() {
+  const v = document.querySelector('.view.active'); if (!v) return;
+  if (v.id === 'home') renderMenu();
+  else if (v.id === 'lib') renderLib();
+  else if (v.id === 'teams') renderTeams();
+  else if (v.id === 'team' && !v.contains(document.activeElement)) renderTeam();
+}
+function renderMenu() {
+  $('#cntTeam').textContent = plural(store.list('team').length, 'équipe');
+  $('#cntSystem').textContent = plural(store.list('system').length, 'élément');
+  $('#cntExercise').textContent = plural(store.list('exercise').length, 'exercice');
+}
+
+/* Listes : systèmes et principes / exercices, groupés par catégorie */
+let libKind = 'system';
+function docCard(d) {
+  const data = migrate(JSON.parse(JSON.stringify(d.data))), nOpt = leavesOf(data).length;
+  let nStep = 0; for (let id = data.root; id && data.nodes[id]; id = data.nodes[id].children[0]) nStep++;
+  return `<li><button class="card" data-open="${d.id}"><span class="name">${esc(fullName(d))}</span>
+    <span class="meta">${COURT_NAME[data.court] || ''} · ${nOpt > 1 ? nOpt + ' options' : plural(nStep, 'étape')} · modifié le ${new Date(d.updatedAt).toLocaleDateString('fr-FR')}</span></button></li>`;
+}
+function renderLib() {
+  const items = store.list(libKind).sort(byName);
+  $('#libTitle').textContent = KIND[libKind].title; document.title = KIND[libKind].title + ' · Coach EMBT';
+  $('#libEmpty').hidden = items.length > 0;
+  $('#libList').innerHTML = [...CATS[libKind], { k: null, label: 'À classer' }].map(c => {
+    const its = items.filter(d => (c.k ? d.category === c.k : !catOf(d)));
+    return its.length ? `<h2>${esc(c.label)}</h2><ul class="list">${its.map(docCard).join('')}</ul>` : '';
   }).join('');
 }
-$('#list').addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) location.hash = '#/s/' + b.dataset.open; });
-$('#newSys').addEventListener('click', () => {
-  const sys = { id: newId(), name: 'Nouveau système', data: fresh(true) };
-  store.put(sys); location.hash = '#/s/' + sys.id + '/edit';
-  setTimeout(() => { $('#sysName').focus(); $('#sysName').select(); }, 50);
+$('#libList').addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) location.hash = '#/s/' + b.dataset.open; });
+$('#newDoc').addEventListener('click', () => openDialog(libKind, null));
+
+/* Fenêtre : création / modification (catégorie, nom, équipe, duplication) */
+let dlg = null;
+function openDialog(kind, id) {
+  const d = id ? store.get(id) : null;
+  dlg = { kind, id };
+  $('#dlgTitle').textContent = d ? 'Informations' : KIND[kind].newTitle;
+  $('#fCat').innerHTML = '<option value="">Choisir…</option>' + CATS[kind].map(c => `<option value="${c.k}">${esc(c.label)}</option>`).join('');
+  $('#fCat').value = (d && d.category) || '';
+  $('#fName').value = d ? d.name || '' : '';
+  $('#nameHint').textContent = kind === 'exercise' ? '(obligatoire)' : '(facultatif)';
+  $('#teamRow').hidden = kind !== 'system';
+  const teams = store.list('team').sort(byName);
+  $('#fTeam').innerHTML = '<option value="">Aucune équipe</option>' + teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('') +
+    '<option value="__new">+ Créer une nouvelle équipe</option>';
+  $('#fTeam').value = (d && d.teamId && store.get(d.teamId)) ? d.teamId : '';
+  $('#fNewTeam').value = ''; $('#fDupOn').checked = false; $('#dupLabel').textContent = KIND[kind].dup;
+  $('#fOk').textContent = d ? 'Enregistrer' : 'Créer'; $('#fErr').textContent = '';
+  updateDialog(); $('#docDialog').hidden = false; $('#fCat').focus();
+}
+function closeDialog() { $('#docDialog').hidden = true; dlg = null; }
+function updateDialog() {
+  if (!dlg) return;
+  const cat = $('#fCat').value, sources = cat && !dlg.id ? store.list(dlg.kind).filter(d => d.category === cat).sort(byName) : [];
+  $('#dupRow').hidden = !sources.length;
+  $('#dupPick').hidden = !sources.length || !$('#fDupOn').checked;
+  const keep = $('#fDup').value;
+  $('#fDup').innerHTML = sources.map(d => `<option value="${d.id}">${esc(fullName(d))}</option>`).join('');
+  if (sources.some(d => d.id === keep)) $('#fDup').value = keep;
+  const tv = $('#fTeam').value;
+  $('#newTeamRow').hidden = dlg.kind !== 'system' || tv !== '__new';
+  const team = tv === '__new' ? $('#fNewTeam').value.trim() : teamLabel(tv);
+  $('#fPreview').textContent = nameParts(dlg.kind, cat, $('#fName').value.trim(), team) || '—';
+}
+['fCat', 'fDupOn', 'fDup', 'fName', 'fTeam', 'fNewTeam'].forEach(id => { $('#' + id).addEventListener('input', updateDialog); $('#' + id).addEventListener('change', updateDialog); });
+$('#fCancel').addEventListener('click', closeDialog);
+$('#docDialog').addEventListener('click', e => { if (e.target.id === 'docDialog') closeDialog(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) closeDialog(); });
+$('#fOk').addEventListener('click', () => {
+  const kind = dlg.kind, cat = $('#fCat').value, name = $('#fName').value.trim(), err = m => { $('#fErr').textContent = m; };
+  if (!cat) return err('Choisis une catégorie.');
+  if (kind === 'exercise' && !name) return err('Le nom est obligatoire pour un exercice.');
+  let teamId = kind === 'system' ? $('#fTeam').value : '';
+  if (teamId === '__new') {
+    const tn = $('#fNewTeam').value.trim(); if (!tn) return err('Donne un nom à la nouvelle équipe.');
+    const t = { id: newId(), kind: 'team', name: tn, data: { players: [] } }; store.put(t); teamId = t.id;
+  }
+  if (dlg.id) {                                            // modification des informations
+    const d = store.get(dlg.id); Object.assign(d, { category: cat, name, teamId: teamId || null }); store.put(d);
+    closeDialog(); $('#sysTitle').textContent = fullName(d); document.title = fullName(d) + ' · Coach EMBT'; return;
+  }
+  let data;
+  if (!$('#dupPick').hidden && $('#fDup').value) { data = migrate(JSON.parse(JSON.stringify(store.get($('#fDup').value).data))); data.cur = 0; }
+  else data = fresh(true, FULL_COURT_CATS.has(cat) ? 'full' : 'half');
+  const d = { id: newId(), kind, category: cat, name, teamId: teamId || null, data };
+  store.put(d); closeDialog(); location.hash = '#/s/' + d.id + '/edit';
 });
-$('#toHome').addEventListener('click', () => { location.hash = '#/'; });
+$('#editInfo').addEventListener('click', () => { const d = store.get(currentId); if (d) openDialog(d.kind, d.id); });
+
+/* Équipes et joueurs */
+let teamId = null;
+function renderTeams() {
+  const ts = store.list('team').sort(byName), sys = store.list('system');
+  $('#teamEmpty').hidden = ts.length > 0; document.title = 'Équipes · Coach EMBT';
+  $('#teamList').innerHTML = ts.map(t => `<li><button class="card" data-team="${t.id}"><span class="name">${esc(t.name)}</span>
+    <span class="meta">${plural((t.data.players || []).length, 'joueur')} · ${plural(sys.filter(d => d.teamId === t.id).length, 'système')}</span></button></li>`).join('');
+}
+$('#teamList').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (b) location.hash = '#/equipes/' + b.dataset.team; });
+$('#newTeam').addEventListener('click', () => {
+  const t = { id: newId(), kind: 'team', name: 'Nouvelle équipe', data: { players: [] } }; store.put(t);
+  location.hash = '#/equipes/' + t.id; setTimeout(() => { $('#teamName').focus(); $('#teamName').select(); }, 50);
+});
+function renderTeam() {
+  const t = store.get(teamId); if (!t) return;
+  $('#teamName').value = t.name; document.title = t.name + ' · Coach EMBT';
+  const ps = t.data.players || (t.data.players = []);
+  const opts = v => '<option value="">Poste…</option>' + POSTES.map(p => `<option${p === v ? ' selected' : ''}>${p}</option>`).join('');
+  $('#roster').innerHTML = (ps.length ? '<div class="prow head"><span>Nom</span><span>Prénom</span><span>Poste de jeu</span><span></span></div>' : '<p>Aucun joueur pour l’instant.</p>') +
+    ps.map(p => `<div class="prow" data-pid="${p.id}"><input data-f="lastName" placeholder="Nom" value="${esc(p.lastName || '')}" aria-label="Nom">
+      <input data-f="firstName" placeholder="Prénom" value="${esc(p.firstName || '')}" aria-label="Prénom">
+      <select data-f="position" aria-label="Poste de jeu">${opts(p.position)}</select>
+      <button class="icon" data-delp aria-label="Retirer ce joueur">×</button></div>`).join('');
+}
+function editTeam(fn) { const t = store.get(teamId); if (t) { fn(t); store.put(t); } }
+$('#roster').addEventListener('input', e => {
+  const row = e.target.closest('[data-pid]'), f = e.target.dataset.f; if (!row || !f) return;
+  editTeam(t => { const p = t.data.players.find(x => x.id === row.dataset.pid); if (p) p[f] = e.target.value; });
+});
+$('#roster').addEventListener('click', e => {
+  const b = e.target.closest('[data-delp]'); if (!b) return;
+  const pid = b.closest('[data-pid]').dataset.pid; editTeam(t => { t.data.players = t.data.players.filter(x => x.id !== pid); }); renderTeam();
+});
+$('#addPlayer').addEventListener('click', () => {
+  editTeam(t => t.data.players.push({ id: newId(), lastName: '', firstName: '', position: '' })); renderTeam();
+  const rows = document.querySelectorAll('#roster .prow[data-pid]'); if (rows.length) rows[rows.length - 1].querySelector('input').focus();
+});
+$('#teamName').addEventListener('input', e => editTeam(t => { t.name = e.target.value.trim() || 'Équipe sans nom'; }));
+let delTeamArmed = 0;
+$('#delTeam').addEventListener('click', () => {
+  const b = $('#delTeam');
+  if (!delTeamArmed) { b.textContent = 'Confirmer ?'; b.classList.add('primary'); delTeamArmed = setTimeout(disarmTeam, 3000); return; }
+  disarmTeam();
+  for (const d of store.list('system')) if (d.teamId === teamId) { d.teamId = null; store.put(d); }
+  store.remove(teamId); location.hash = '#/equipes';
+});
+function disarmTeam() { clearTimeout(delTeamArmed); delTeamArmed = 0; $('#delTeam').textContent = 'Supprimer'; $('#delTeam').classList.remove('primary'); }
+
+$('#toHome').addEventListener('click', () => { const d = store.get(currentId); location.hash = d ? KIND[d.kind].list : '#/'; });
 /* hauteur du bandeau et de la barre d'outils (mobile) pour dimensionner le terrain */
 function fitCourt() {
   const b = $('#board'), mobile = matchMedia('(max-width:720px)').matches;
@@ -927,11 +1158,11 @@ async function exportImages() {
   btn.disabled = true;
   const keepChoice = { ...state.choice }, keepCur = state.cur;
   try {
-    const root = await drive.folder();
+    const root = await drive.folder(sys.kind);
     const q = `appProperties has { key='coachImagesFor' and value='${sys.id}' } and trashed=false`;
     const old = await drive.api('/drive/v3/files?' + new URLSearchParams({ q, fields: 'files(id)', spaces: 'drive' }));
     for (const f of old.files || []) await drive.api(`/drive/v3/files/${f.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }) });
-    const top = await drive.mkdir(sys.name, root, { coachImagesFor: sys.id });
+    const title = fullName(sys), top = await drive.mkdir(title.replace(/[\\/]/g, '-'), root, { coachImagesFor: sys.id });
     const leaves = leavesOf(state), multi = leaves.length > 1;
     let total = 0, done = 0;
     for (const l of leaves) { Object.assign(state.choice, l.choice); recomputePath(); total += path.length; }
@@ -942,10 +1173,10 @@ async function exportImages() {
       const frames = derive(), n = path.length, pad = n >= 10 ? 2 : 1;
       for (let k = 0; k < n; k++) {
         btn.textContent = `Export… ${++done} / ${total}`;
-        await drive.uploadFile(`Étape ${String(k + 1).padStart(pad, '0')}.png`, 'image/png', await stepImage(sys.name, opt, k, n, frames[k]), dir);
+        await drive.uploadFile(`Étape ${String(k + 1).padStart(pad, '0')}.png`, 'image/png', await stepImage(title, opt, k, n, frames[k]), dir);
       }
     }
-    hint(`Export terminé : ${total} image${total > 1 ? 's' : ''} dans « ${sys.name} » sur Google Drive.`);
+    hint(`Export terminé : ${total} image${total > 1 ? 's' : ''} dans « ${title} » sur Google Drive.`);
   } catch (e) {
     console.error('Export', e);
     if (e.auth) { drive.token = null; drive.set('expired'); }
@@ -961,17 +1192,28 @@ $('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId;
 function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id)); }
 function route() {
   if (anim) stopAnim();
-  draft = null; drag = null; disarmDel();
-  const m = location.hash.match(/^#\/s\/([^/]+)(\/edit)?$/), sys = m && store.get(m[1]);
-  if (!sys) { currentId = null; showView('home'); renderHome(); document.title = 'Coach · EMBT'; return; }
+  draft = null; drag = null; disarmDel(); disarmTeam(); closeDialog();
+  const h = location.hash; let m;
+  const sys = (m = h.match(/^#\/s\/([^/]+)(\/edit)?$/)) && store.get(m[1]);
+  if (sys && sys.kind !== 'team') return openBoard(sys, !!m[2]);
+  currentId = null;
+  if (h === '#/systemes' || h === '#/exercices') { libKind = h === '#/systemes' ? 'system' : 'exercise'; showView('lib'); return renderLib(); }
+  if (h === '#/equipes') { showView('teams'); return renderTeams(); }
+  const t = (m = h.match(/^#\/equipes\/([^/]+)$/)) && store.get(m[1]);
+  if (t && t.kind === 'team') { teamId = t.id; showView('team'); return renderTeam(); }
+  if (h === '#/seances') { showView('soon'); document.title = 'Séances · Coach EMBT'; return; }
+  showView('home'); renderMenu(); document.title = 'Coach · EMBT';
+}
+function openBoard(sys, edit) {
   if (currentId !== sys.id) {
     currentId = sys.id; state = migrate(JSON.parse(JSON.stringify(sys.data))); undoStack = []; state.cur = 0;
   }
   recomputePath();
-  mode = m[2] ? 'edit' : 'view';
+  mode = edit ? 'edit' : 'view';
   if (mode === 'view') { sel = null; state.cur = 0; }
   $('#board').dataset.mode = mode;
-  $('#sysTitle').textContent = sys.name; $('#sysName').value = sys.name; document.title = sys.name + ' · Coach EMBT';
+  $('#toHome').textContent = KIND[sys.kind].back;
+  $('#sysTitle').textContent = fullName(sys); document.title = fullName(sys) + ' · Coach EMBT';
   showView('board'); fitCourt(); renderAll();
 }
 window.addEventListener('hashchange', route);
