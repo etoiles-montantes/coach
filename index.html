@@ -120,7 +120,14 @@ a.hbtn{text-decoration:none;display:inline-block}
 .prow.edit{grid-template-columns:1fr 1fr auto auto;background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:10px;padding:8px}
 .posbtns{display:flex;gap:4px}
 .pos{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--embt-navy);font-weight:800}
-.pos[aria-pressed="true"]{background:var(--embt-navy);border-color:var(--embt-navy);color:var(--embt-cream)}
+.pos.pri{background:var(--embt-navy);border-color:var(--embt-navy);color:var(--embt-cream);border-radius:4px}
+.pos.sec{background:var(--embt-red);border-color:var(--embt-red);color:var(--embt-cream);border-radius:12px}
+.badges{display:flex;gap:4px;align-items:center}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;font-weight:800;font-size:.9rem;color:var(--embt-cream)}
+.badge.pri{background:var(--embt-navy);border-radius:4px}
+.badge.sec{background:var(--embt-red);border-radius:10px}
+.poshint{grid-column:1 / -1;margin:2px 0 0;font-size:.8rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.poshint .badge{width:20px;height:20px;font-size:.75rem}
 .rowact{display:flex;gap:6px;align-items:center}
 .prow.head{font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
 .prow input,.prow select,.field input,.field select{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--embt-navy);width:100%;min-width:0}
@@ -1136,13 +1143,18 @@ $('#newTeam').addEventListener('click', () => {
   const t = { id: newId(), kind: 'team', name: 'Nouvelle équipe', data: { players: [] } }; store.put(t);
   location.hash = '#/equipes/' + t.id; setTimeout(() => { $('#teamName').focus(); $('#teamName').select(); }, 50);
 });
-/* Joueurs : lignes en lecture, triées du poste 1 au poste 5 (1 < 1-2 < 2 < 2-3 …) ; ✎ ouvre la ligne en édition. */
+/* Joueurs : poste principal puis secondaire (ordre des clics). Tri : 1 < 1-2 < 2-1 < 2 < 2-3 < 3-2 < 3 …,
+   puis nom de famille. Lignes en lecture ; ✎ ouvre la ligne en édition. */
 let editPid = null;
-const posOf = p => (Array.isArray(p.positions) ? [...p.positions].sort((x, y) => x - y) : OLD_POSTES[p.position] ? [OLD_POSTES[p.position]] : []);
+const posOf = p => (Array.isArray(p.positions) ? p.positions.slice(0, 2) : OLD_POSTES[p.position] ? [OLD_POSTES[p.position]] : []);
+const posKey = p => { const [a, b] = posOf(p); if (!a) return [9, 9, 0]; if (!b) return [a, a, 0]; return [Math.min(a, b), Math.max(a, b), a < b ? 0 : 1]; };
 function byPoste(a, b) {
-  const pa = posOf(a), pb = posOf(b), ka = pa.length ? [pa[0], pa[pa.length - 1]] : [9, 9], kb = pb.length ? [pb[0], pb[pb.length - 1]] : [9, 9];
-  return ka[0] - kb[0] || ka[1] - kb[1] || `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'fr');
+  const ka = posKey(a), kb = posKey(b);
+  return ka[0] - kb[0] || ka[1] - kb[1] || ka[2] - kb[2] || `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'fr');
 }
+const posBadges = pos => (pos.length ? pos.map((n, i) => `<span class="badge ${i ? 'sec' : 'pri'}" title="Poste ${i ? 'secondaire' : 'principal'}">${n}</span>`).join('') : '—');
+const posButtons = pos => [1, 2, 3, 4, 5].map(n => { const i = pos.indexOf(n);
+  return `<button class="pos${i === 0 ? ' pri' : i === 1 ? ' sec' : ''}" data-pos="${n}" aria-pressed="${i >= 0}" aria-label="Poste ${n}${i === 0 ? ', principal' : i === 1 ? ', secondaire' : ''}">${n}</button>`; }).join('');
 function renderTeam() {
   const t = store.get(teamId); if (!t) return;
   $('#teamName').value = t.name; document.title = t.name + ' · Coach EMBT';
@@ -1151,11 +1163,12 @@ function renderTeam() {
     ps.map(p => {
       const pos = posOf(p);
       if (p.id !== editPid) return `<div class="prow" data-pid="${p.id}"><span>${esc(p.lastName || '—')}</span><span>${esc(p.firstName || '—')}</span>
-        <span>${pos.length ? pos.join(', ') : '—'}</span><button class="icon" data-editp aria-label="Modifier ce joueur">✎</button></div>`;
+        <span class="badges">${posBadges(pos)}</span><button class="icon" data-editp aria-label="Modifier ce joueur">✎</button></div>`;
       return `<div class="prow edit" data-pid="${p.id}"><input data-f="lastName" placeholder="Nom" value="${esc(p.lastName || '')}" aria-label="Nom">
         <input data-f="firstName" placeholder="Prénom" value="${esc(p.firstName || '')}" aria-label="Prénom">
-        <div class="posbtns" role="group" aria-label="Postes de jeu">${[1, 2, 3, 4, 5].map(n => `<button class="pos" data-pos="${n}" aria-pressed="${pos.includes(n)}">${n}</button>`).join('')}</div>
-        <div class="rowact"><button class="icon" data-delp aria-label="Retirer ce joueur">×</button><button class="btn primary" data-okp>OK</button></div></div>`;
+        <div class="posbtns" role="group" aria-label="Postes de jeu">${posButtons(pos)}</div>
+        <div class="rowact"><button class="icon" data-delp aria-label="Retirer ce joueur">×</button><button class="btn primary" data-okp>OK</button></div>
+        <p class="poshint"><span class="badge pri">1</span> 1er clic : poste principal · <span class="badge sec">2</span> 2e clic : poste secondaire</p></div>`;
     }).join('');
 }
 function editTeam(fn) { const t = store.get(teamId); if (t) { fn(t); store.put(t); } }
@@ -1173,8 +1186,11 @@ $('#roster').addEventListener('click', e => {
   const pb = e.target.closest('[data-pos]');
   if (pb) {
     const n = +pb.dataset.pos;
-    editTeam(t => { const p = playerOf(t, pid); if (!p) return; const cur = posOf(p); p.positions = cur.includes(n) ? cur.filter(x => x !== n) : [...cur, n].sort((x, y) => x - y); delete p.position; });
-    pb.setAttribute('aria-pressed', pb.getAttribute('aria-pressed') !== 'true');   // pas de re-tri pendant l'édition
+    let next = [];
+    editTeam(t => { const p = playerOf(t, pid); if (!p) return; const cur = posOf(p);
+      next = cur.includes(n) ? cur.filter(x => x !== n) : cur.length < 2 ? [...cur, n] : [cur[0], n];   // 3e clic : remplace le secondaire
+      p.positions = next; delete p.position; });
+    pb.parentElement.innerHTML = posButtons(next);   // pas de re-tri pendant l'édition
   }
 });
 $('#addPlayer').addEventListener('click', () => {
