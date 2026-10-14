@@ -57,6 +57,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
 .board{display:flex;justify-content:center;position:relative}
+.zoomreset{position:absolute;top:8px;right:8px;z-index:3}
+.zoomreset[hidden]{display:none}
 .fork{align-self:center;background:var(--embt-cream);border:1px solid var(--line);border-top:4px solid var(--embt-gold);border-radius:14px;padding:12px 16px;max-width:100%;text-align:center}
 .fork[hidden]{display:none}
 .fork p{font-family:var(--font-title);font-weight:900;font-size:1.15rem;margin:0 0 10px}
@@ -330,6 +332,7 @@ a.hbtn{text-decoration:none;display:inline-block}
       <button class="tool sys-only" data-tool="ppass"><svg viewBox="0 0 24 24"><path d="M2 12h15" stroke="#961321" stroke-width="2.2" stroke-dasharray="2 2"/><path d="M22 12l-6.5-4v8z" fill="#961321"/></svg>Passe possible</button>
       <button class="tool" data-tool="dribble"><svg viewBox="0 0 24 24"><path d="M2 12l2-3.5 2.5 7 2.5-7 2.5 7 2.5-3.5h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 12l-6.5-4v8z" fill="currentColor"/></svg>Dribble</button>
       <button class="tool" data-tool="screen"><svg viewBox="0 0 24 24"><path d="M2 12h17M19 5.5v13" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Écran</button>
+      <button class="tool" data-tool="shot"><svg viewBox="0 0 24 24"><path d="M2 9.5h13M2 14.5h13" stroke="currentColor" stroke-width="2"/><path d="M22 12l-7-5.5v11z" fill="currentColor"/></svg>Tir</button>
       <div class="sep"></div>
       <button class="tool" data-tool="eraser"><svg viewBox="0 0 24 24"><path d="M4 15.5l8.5-8.5 6 6-6.5 6.5H8z M9.5 20h11" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Gomme</button>
     </nav>
@@ -338,6 +341,7 @@ a.hbtn{text-decoration:none;display:inline-block}
         <svg id="court" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Terrain de basket">
           <g id="courtLayer"></g><g id="dynLayer"></g>
         </svg>
+        <button class="btn zoomreset" id="zoomReset" hidden>⤢ Recentrer</button>
       </div>
       <div class="fork" id="fork" hidden role="group" aria-label="Choix de l’option">
         <p>Quelle option ?</p>
@@ -419,7 +423,7 @@ const NAVY = '#082135', RED = '#961321', GOLD = '#C59215', CREAM = '#F3F2ED', R 
 const $ = s => document.querySelector(s);
 const svg = $('#court'), courtLayer = $('#courtLayer'), dyn = $('#dynLayer');
 const HELP = {
-  select: 'Glisse un joueur pour le placer. Touche une flèche : poignée blanche = arrivée, « + » = ajouter un point de courbure (2 max), point doré = le déplacer (le toucher sans bouger le supprime).',
+  select: 'Zoom : pince à deux doigts (Ctrl + molette sur ordinateur). Glisse un joueur pour le placer. Touche une flèche : poignée blanche = arrivée, « + » = ajouter un point de courbure (2 max), point doré = le déplacer (le toucher sans bouger le supprime).',
   O: 'Touche le terrain pour placer un attaquant (5 maximum).',
   X: 'Touche le terrain pour placer un défenseur (5 maximum).',
   ball: 'Touche un attaquant pour lui donner le ballon.',
@@ -427,6 +431,7 @@ const HELP = {
   P: 'Touche le terrain pour placer un joueur (autant que tu veux).',
   cone: 'Touche le terrain pour poser un plot.',
   ppass: 'Glisse depuis le porteur jusqu’à un coéquipier : passe possible, sans effet sur le ballon.',
+  shot: 'Touche le porteur du ballon pour le faire tirer vers le panier le plus proche.',
   move: 'Glisse depuis un joueur jusqu’à sa destination.',
   pass: 'Glisse depuis le porteur jusqu’à un coéquipier. S’il court dans la même étape, la passe va au bout de sa course (balle donnée en fin de course).',
   dribble: 'Glisse depuis le porteur du ballon jusqu’à l’arrivée du dribble.',
@@ -659,6 +664,7 @@ const MOVES = new Set(['move', 'dribble', 'screen']);   // « pass » déplace l
 const moveOf = (k, id) => path[k].actions.find(a => a.actor === id && MOVES.has(a.type));
 const passOf = k => path[k].actions.find(a => a.type === 'pass');
 const passesOf = k => path[k].actions.filter(a => a.type === 'pass');
+const shotsOf = k => path[k].actions.filter(a => a.type === 'shot');
 const startBalls = () => (Array.isArray(state.balls0) ? state.balls0.slice() : state.ball0 ? [state.ball0] : []);   // exercices : plusieurs porteurs
 function derive() {
   const out = []; let pos = {}, balls = startBalls();
@@ -669,14 +675,16 @@ function derive() {
     out.push({ pos, balls, ball: balls[0], end });
     balls = balls.slice();
     for (const p of passesOf(k)) { const i = balls.indexOf(p.actor); if (i >= 0 && pos[p.target]) balls[i] = p.target; }
+    for (const sh of shotsOf(k)) { const i = balls.indexOf(sh.actor); if (i >= 0) balls.splice(i, 1); }   // tir : ballon dans le panier, il disparaît
     pos = end;
   }
   out.final = { pos, balls, ball: balls[0] };
   return out;
 }
 const HOOPS = { half: [{ x: 7.5, y: 1.575 }], full: [{ x: 7.5, y: 1.575 }, { x: 7.5, y: 26.425 }] };
+const nearestHoop = q => (HOOPS[state.court] || HOOPS.half).reduce((m, b) => (dist(b, q) < dist(m, q) ? b : m));
 function ballAt(q) {                                      // ballon placé côté panier le plus proche
-  const h = (HOOPS[state.court] || HOOPS.half).reduce((m, b) => (dist(b, q) < dist(m, q) ? b : m));
+  const h = nearestHoop(q);
   const dx = h.x - q.x, dy = h.y - q.y, L = Math.hypot(dx, dy), r = 0.52;
   return L < 0.01 ? { x: q.x, y: q.y - r } : { x: q.x + dx / L * r, y: q.y + dy / L * r };
 }
@@ -723,7 +731,20 @@ function pointAt(g, t) {                                  // position à vitesse
   return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
 }
 
+function shotSVG(a, F, o) {
+  const from = F.pos[a.actor]; if (!from) return '';
+  const h = nearestHoop(from), dx = h.x - from.x, dy = h.y - from.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+  const s0 = R + 0.38, e = s0 + Math.max(0.6, Math.min(1.6, L - s0 - 0.4));   // démarre après le ballon, longueur fixe (1,6 m)
+  const A = (d, w) => `${fx(from.x + ux * d + px * w)} ${fx(from.y + uy * d + py * w)}`;
+  const d = `M${A(s0, 0.09)}L${A(e - 0.3, 0.09)}M${A(s0, -0.09)}L${A(e - 0.3, -0.09)}`, head = `M${A(e, 0)}L${A(e - 0.45, 0.26)}L${A(e - 0.45, -0.26)}Z`;
+  const isSel = o.interactive && sel && sel.kind === 'action' && sel.id === a.id;
+  return `<g ${o.interactive ? `data-k="action" data-id="${a.id}"` : 'pointer-events="none"'} opacity="${o.opacity ?? 1}">
+    ${o.interactive ? `<path d="M${A(s0, 0)}L${A(e, 0)}" stroke="transparent" stroke-width="0.8" pointer-events="stroke"/>` : ''}
+    <path d="${d}" stroke="${isSel ? GOLD : CREAM}" stroke-width="${isSel ? 0.36 : 0.24}" opacity="${isSel ? 1 : 0.75}" stroke-linecap="round"/>
+    <path d="${d}" stroke="${NAVY}" stroke-width="0.07"/><path d="${head}" fill="${NAVY}"/></g>`;
+}
 function actionSVG(a, F, o = {}) {
+  if (a.type === 'shot') return shotSVG(a, F, o);
   const g = geom(a, F); if (!g) return '';
   const color = a.type === 'ppass' ? RED : NAVY, isPass = a.type === 'pass' || a.type === 'ppass';
   let pts = g.pts.filter(p => dist(p, g.from) > R + 0.08);
@@ -772,10 +793,26 @@ const COURT_IMG = {
 const FULL_ROT = 'matrix(0 -1 1 0 0 15)';
 function renderCourt() {
   const c = COURT_IMG[state.court] || COURT_IMG.half;
-  svg.setAttribute('viewBox', `${c.x} ${c.y} ${c.w} ${c.h}`);
+  if (viewCourt !== state.court) { view = null; viewCourt = state.court; }   // le zoom se garde tant qu'on ne change pas de terrain
+  applyView();
   svg.style.aspectRatio = `${c.w} / ${c.h}`;
   courtLayer.innerHTML = `<image href="${c.src}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" preserveAspectRatio="none"/>`;
   if (state.court === 'full') dyn.setAttribute('transform', FULL_ROT); else dyn.removeAttribute('transform');
+}
+/* ---------- zoom en édition : pincer à deux doigts (et déplacer), Ctrl + molette ou pincement du pavé tactile ---------- */
+let view = null, viewCourt = null, pinch = null, gestureLock = false;
+const pointers = new Map();
+const baseView = () => COURT_IMG[state.court] || COURT_IMG.half;
+function applyView() { const v = view || baseView(); svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`); $('#zoomReset').hidden = !view; }
+function resetZoom() { view = null; applyView(); }
+function fitBox(v) { const r = svg.getBoundingClientRect(), s = Math.min(r.width / v.w, r.height / v.h); return { s, ox: r.left + (r.width - v.w * s) / 2, oy: r.top + (r.height - v.h * s) / 2 }; }
+function toSvgWith(v, cx, cy) { const f = fitBox(v); return { x: v.x + (cx - f.ox) / f.s, y: v.y + (cy - f.oy) / f.s }; }
+function viewFor(P, cx, cy, w) {                          // vue de largeur w qui garde le point P sous le doigt / le curseur
+  const b = baseView(); w = Math.max(b.w / 6, Math.min(b.w, w));
+  if (w >= b.w * 0.995) return null;
+  const h = w * b.h / b.w, f = fitBox({ w, h });
+  const x = Math.max(b.x, Math.min(b.x + b.w - w, P.x - (cx - f.ox) / f.s)), y = Math.max(b.y, Math.min(b.y + b.h - h, P.y - (cy - f.oy) / f.s));
+  return { x, y, w, h };
 }
 const upright = (x, y) => (state.court === 'full' ? ` transform="rotate(90 ${fx(x)} ${fx(y)})"` : '');   // numéros toujours droits
 
@@ -803,17 +840,20 @@ function ballSVG(p) {
     <path d="M${fx(p.x - .21)} ${fx(p.y)}H${fx(p.x + .21)}M${fx(p.x)} ${fx(p.y - .21)}V${fx(p.y + .21)}" stroke="${NAVY}" stroke-width="0.03"/></g>`;
 }
 function handlesSVG(a, F) {
+  if (a.type === 'shot') return '';
   const g = geom(a, F); if (!g) return '';
   let s = '';
-  if (a.type !== 'pass' && a.type !== 'ppass') s += `<circle data-k="h-to" data-id="${a.id}" cx="${fx(g.to.x)}" cy="${fx(g.to.y)}" r="0.3" fill="${CREAM}" stroke="${NAVY}" stroke-width="0.07"/>`;
-  g.via.forEach((v, i) => { s += `<circle data-k="h-via" data-id="${a.id}" data-i="${i}" cx="${fx(v.x)}" cy="${fx(v.y)}" r="0.3" fill="${GOLD}" stroke="${NAVY}" stroke-width="0.07"/>`; });
-  if (g.via.length < MAX_VIA) {                           // « + » : ajoute un point de courbure au milieu du plus long tronçon
-    let best = 0; for (let i = 1; i < g.P.length - 1; i++) if (dist(g.P[i], g.P[i + 1]) > dist(g.P[best], g.P[best + 1])) best = i;
-    const p0 = g.P[best - 1] || g.P[best], p1 = g.P[best], p2 = g.P[best + 1], p3 = g.P[best + 2] || g.P[best + 1];
-    const mm = { x: (-p0.x + 9 * p1.x + 9 * p2.x - p3.x) / 16, y: (-p0.y + 9 * p1.y + 9 * p2.y - p3.y) / 16 };   // milieu du tronçon (Catmull-Rom, t = 0,5)
-    s += `<g data-k="h-add" data-id="${a.id}" data-i="${best}" data-x="${fx(mm.x)}" data-y="${fx(mm.y)}"><circle cx="${fx(mm.x)}" cy="${fx(mm.y)}" r="0.27" fill="${CREAM}" stroke="${GOLD}" stroke-width="0.08"/>
-      <path d="M${fx(mm.x - 0.14)} ${fx(mm.y)}H${fx(mm.x + 0.14)}M${fx(mm.x)} ${fx(mm.y - 0.14)}V${fx(mm.y + 0.14)}" stroke="${NAVY}" stroke-width="0.06"/></g>`;
-  }
+  if (a.type !== 'pass' && a.type !== 'ppass') s += `<g data-k="h-to" data-id="${a.id}"><circle cx="${fx(g.to.x)}" cy="${fx(g.to.y)}" r="0.55" fill="transparent" pointer-events="all"/><circle cx="${fx(g.to.x)}" cy="${fx(g.to.y)}" r="0.32" fill="${CREAM}" stroke="${NAVY}" stroke-width="0.07"/></g>`;
+  const hit = (x, y) => `<circle cx="${fx(x)}" cy="${fx(y)}" r="0.55" fill="transparent" pointer-events="all"/>`;   // zone tactile plus large
+  g.via.forEach((v, i) => { s += `<g data-k="h-via" data-id="${a.id}" data-i="${i}">${hit(v.x, v.y)}<circle cx="${fx(v.x)}" cy="${fx(v.y)}" r="0.32" fill="${GOLD}" stroke="${NAVY}" stroke-width="0.07"/></g>`; });
+  /* « + » : sans point → deux « + » (au tiers et aux deux tiers) ; avec un point → un « + » sur chaque tronçon. */
+  const cat = (i, t) => { const p0 = g.P[i - 1] || g.P[i], p1 = g.P[i], p2 = g.P[i + 1], p3 = g.P[i + 2] || g.P[i + 1], t2 = t * t, t3 = t2 * t,
+    f = (a0, a1, a2, a3) => 0.5 * (2 * a1 + (a2 - a0) * t + (2 * a0 - 5 * a1 + 4 * a2 - a3) * t2 + (3 * a1 - a0 - 3 * a2 + a3) * t3);
+    return { x: f(p0.x, p1.x, p2.x, p3.x), y: f(p0.y, p1.y, p2.y, p3.y) }; };
+  const adds = g.via.length === 0 ? [[0, 1 / 3], [0, 2 / 3]] : g.via.length === 1 ? [[0, 0.5], [1, 0.5]] : [];
+  adds.forEach(([i, t]) => { const m = cat(i, t);
+    s += `<g data-k="h-add" data-id="${a.id}" data-i="${i}" data-x="${fx(m.x)}" data-y="${fx(m.y)}">${hit(m.x, m.y)}<circle cx="${fx(m.x)}" cy="${fx(m.y)}" r="0.28" fill="${CREAM}" stroke="${GOLD}" stroke-width="0.08"/>
+      <path d="M${fx(m.x - 0.14)} ${fx(m.y)}H${fx(m.x + 0.14)}M${fx(m.x)} ${fx(m.y - 0.14)}V${fx(m.y + 0.14)}" stroke="${NAVY}" stroke-width="0.06"/></g>`; });
   return s;
 }
 
@@ -830,10 +870,20 @@ function renderDyn() {
         const m = moveOf(k, id), g = m && geom(m, F);
         pos[id] = g ? pointAt(g, anim.t) : F.pos[id];
       }
-      for (const p of passesOf(k)) {                     // receveur en mouvement : la balle part en cours de course et arrive à la fin
+      /* La balle reste dans les mains du joueur tant qu'il bouge, puis part de là où il la lâche.
+         Passeur en mouvement : lâchée après une partie de sa course ; receveur en mouvement : arrive en fin de course. */
+      const animPos = (id, t) => { const m = moveOf(k, id), g = m && geom(m, F); return g ? pointAt(g, t) : F.pos[id]; };
+      const lerp = (s0, e, u) => ({ x: s0.x + (e.x - s0.x) * u, y: s0.y + (e.y - s0.y) * u });
+      for (const p of passesOf(k)) {
         const g = F.balls.includes(p.actor) && geom(p, F); if (!g) continue;
-        const tp = moveOf(k, p.target) ? (anim.t - 0.45) / 0.55 : anim.t;
-        ballPts.push({ from: p.actor, q: tp <= 0 ? ballAt(pos[p.actor]) : pointAt(g, tp) });
+        const passerMoves = !!moveOf(k, p.actor), tr = passerMoves ? 0.55 : moveOf(k, p.target) ? 0.45 : 0, u = (anim.t - tr) / (1 - tr);
+        const q = u <= 0 ? ballAt(pos[p.actor]) : passerMoves ? lerp(ballAt(animPos(p.actor, tr)), g.to, u) : pointAt(g, u);
+        ballPts.push({ from: p.actor, q });
+      }
+      for (const sh of shotsOf(k)) {                     // tir : la balle va au panier puis disparaît
+        if (!F.balls.includes(sh.actor)) continue;
+        const tr = moveOf(k, sh.actor) ? 0.55 : 0, u = (anim.t - tr) / (1 - tr), s0 = ballAt(animPos(sh.actor, tr));
+        ballPts.push({ from: sh.actor, q: u <= 0 ? ballAt(pos[sh.actor]) : lerp(s0, nearestHoop(s0), Math.min(u, 1)), hide: u >= 1 });
       }
       if (anim.pp) html += acts.filter(a => a.type === 'ppass').map(a => actionSVG(a, F)).join('');   // pause « passes possibles »
       else if (mode === 'edit') html += acts.map(a => actionSVG(a, F, { opacity: 0.28 })).join('');
@@ -844,7 +894,7 @@ function renderDyn() {
   if (draft) html += actionSVG(draft, F, { opacity: 0.85 });
   for (const o of state.objs || []) html += objSVG(o, !anim && sel && sel.kind === 'obj' && sel.id === o.id);
   for (const pl of state.players) if (pos[pl.id]) html += playerSVG(pl, pos[pl.id], !anim && sel && sel.kind === 'player' && sel.id === pl.id);
-  for (const h of balls) { const moving = ballPts.find(b => b.from === h); if (moving) html += ballSVG(moving.q); else if (pos[h]) html += ballSVG(ballAt(pos[h])); }
+  for (const h of balls) { const moving = ballPts.find(b => b.from === h); if (moving) { if (!moving.hide) html += ballSVG(moving.q); } else if (pos[h]) html += ballSVG(ballAt(pos[h])); }
   if (!anim && sel && sel.kind === 'action') { const a = acts.find(x => x.id === sel.id); if (a) html += handlesSVG(a, F); }
   dyn.innerHTML = html;
 }
@@ -937,6 +987,42 @@ function finishDraft() {
 }
 
 /* ---------- interactions ---------- */
+const twoFingers = () => { const [a, b] = [...pointers.values()]; return { mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, d: Math.hypot(a.x - b.x, a.y - b.y) || 1 }; };
+svg.addEventListener('pointerdown', e => {
+  if (mode !== 'edit' || anim) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {                              // 2e doigt : on annule le tracé en cours et on passe en zoom
+    draft = null; if (drag) { drag = null; save(); }
+    try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+    const g = twoFingers(), v = view || baseView();
+    pinch = { d0: g.d, w0: v.w, P: toSvgWith(v, g.mid.x, g.mid.y) }; gestureLock = true;
+    renderDyn(); e.stopImmediatePropagation(); return;
+  }
+  if (gestureLock) e.stopImmediatePropagation();
+}, true);
+svg.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (!gestureLock) return;
+  e.stopImmediatePropagation();
+  if (pinch && pointers.size === 2) { const g = twoFingers(); view = viewFor(pinch.P, g.mid.x, g.mid.y, pinch.w0 * pinch.d0 / g.d); applyView(); }
+}, true);
+function liftPointer(e) {
+  const locked = gestureLock; pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  if (!pointers.size) gestureLock = false;
+  if (locked) { e.stopImmediatePropagation(); if (!pointers.size) { renderDyn(); updateUI(); } }
+}
+svg.addEventListener('pointerup', liftPointer, true);
+svg.addEventListener('pointercancel', liftPointer, true);
+svg.addEventListener('wheel', e => {
+  if (mode !== 'edit' || !e.ctrlKey) return;              // Ctrl + molette (et pincement du pavé tactile)
+  e.preventDefault();
+  const v = view || baseView(), P = toSvgWith(v, e.clientX, e.clientY);
+  view = viewFor(P, e.clientX, e.clientY, v.w * Math.exp(e.deltaY * 0.01)); applyView();
+}, { passive: false });
+$('#zoomReset').addEventListener('click', resetZoom);
+
 function svgPoint(e) {
   const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
   const q = p.matrixTransform(dyn.getScreenCTM().inverse()); return { x: q.x, y: q.y };   // repère du calque (tourné en terrain entier)
@@ -986,7 +1072,12 @@ svg.addEventListener('pointerdown', e => {
       let actor = k === 'player' ? id : null;
       if (!actor) { let bd = 0.8; for (const [pid, q] of Object.entries(F.pos)) { const d = dist(q, p); if (d < bd) { bd = d; actor = pid; } } }
       if (!actor) { hint('Pars d’un joueur pour tracer.'); break; }
-      if ((tool === 'pass' || tool === 'ppass' || tool === 'dribble') && !F.balls.includes(actor)) { hint(tool === 'dribble' ? 'Seul un porteur de ballon peut dribbler.' : 'Seul un porteur de ballon peut passer.'); break; }
+      if ((tool === 'pass' || tool === 'ppass' || tool === 'dribble' || tool === 'shot') && !F.balls.includes(actor)) {
+        hint(tool === 'dribble' ? 'Seul un porteur de ballon peut dribbler.' : tool === 'shot' ? 'Seul un porteur de ballon peut tirer.' : 'Seul un porteur de ballon peut passer.'); break; }
+      if (tool === 'shot') {                              // un tir par joueur et par étape
+        commit(); const f = path[state.cur]; f.actions = f.actions.filter(a => !(a.type === 'shot' && a.actor === actor));
+        const a = { id: uid(), type: 'shot', actor }; f.actions.push(a); sel = { kind: 'action', id: a.id }; save(); break;
+      }
       draft = { type: tool, actor, to: p, bend: 0 };
     }
   }
@@ -1022,7 +1113,7 @@ document.querySelectorAll('[data-court]').forEach(b => b.addEventListener('click
   commit(); state.court = b.dataset.court;
   if (state.court === 'half') {
     for (const id in state.pos0) state.pos0[id] = clampP(state.pos0[id]);
-    Object.values(state.nodes).forEach(f => f.actions.forEach(a => a.to = clampP(a.to)));
+    Object.values(state.nodes).forEach(f => f.actions.forEach(a => { if (a.to) a.to = clampP(a.to); }));
   }
   save(); renderAll();
 }));
@@ -1692,7 +1783,7 @@ function stepSVG(k, F) {
   return courtLayer.innerHTML + `<g${state.court === 'full' ? ` transform="${FULL_ROT}"` : ''}>${h}</g>`;
 }
 async function stepImage(title, opt, k, n, F) {
-  const W = 1600, band = 130, vb = svg.getAttribute('viewBox').split(' ').map(Number), ch = Math.round(W * vb[3] / vb[2]);
+  const W = 1600, band = 130, vb = (b => [b.x, b.y, b.w, b.h])(baseView()), ch = Math.round(W * vb[3] / vb[2]);
   const src = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${vb.join(' ')}" width="${W}" height="${ch}">${stepSVG(k, F)}</svg>`;
   const court = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src));
   const logo = await loadImg(document.querySelector('.brand img').src);
@@ -1784,6 +1875,7 @@ function openBoard(sys, edit) {
   $('#board').dataset.mode = mode;
   $('#toHome').textContent = backTo ? '‹ Séance' : KIND[sys.kind].back;
   $('#sysTitle').textContent = fullName(sys); document.title = fullName(sys) + ' · Coach EMBT';
+  view = null; pointers.clear(); pinch = null; gestureLock = false;
   showView('board'); fitCourt(); renderAll();
   if (autoPlay) { autoPlay = false; if (mode === 'view') setTimeout(() => { if (!anim) $('#play').click(); }, 350); }   // ouvert depuis une séance : lecture directe
 }
