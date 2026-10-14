@@ -159,6 +159,8 @@ a.hbtn{text-decoration:none;display:inline-block}
 .ttl h1{margin:0}
 .ttl small{font-weight:600;font-size:.95rem;opacity:.9}
 .att{display:flex;flex-direction:column}
+.att[hidden]{display:none}
+.abs-h{margin-top:14px;font-size:.78rem}
 .arow{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;min-height:48px;border-bottom:1px solid var(--line)}
 .st{border:0;border-radius:999px;padding:7px 14px;min-width:150px;font-weight:800;font-size:.85rem;color:#fff}
 .st-present{background:#2E7D32}.st-late{background:#B86200}.st-absent{background:var(--embt-red)}.st-unexcused{background:#4A0710}
@@ -1207,9 +1209,9 @@ function updateDialog() {
   $('#fPreview').textContent = nameParts(dlg.kind, cat, $('#fName').value.trim(), team) || '—';
 }
 ['fCat', 'fDupOn', 'fDup', 'fName', 'fTeam', 'fNewTeam'].forEach(id => { $('#' + id).addEventListener('input', updateDialog); $('#' + id).addEventListener('change', updateDialog); });
-$('#fCancel').addEventListener('click', closeDialog);
-$('#docDialog').addEventListener('click', e => { if (e.target.id === 'docDialog') closeDialog(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (dlg) closeDialog(); closeSessDialogs(); } });
+$('#fCancel').addEventListener('click', () => cancelDocDialog());
+$('#docDialog').addEventListener('click', e => { if (e.target.id === 'docDialog') cancelDocDialog(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (dlg) return cancelDocDialog(); closeSessDialogs(); } });
 $('#fOk').addEventListener('click', () => {
   const kind = dlg.kind, cat = $('#fCat').value, name = $('#fName').value.trim(), err = m => { $('#fErr').textContent = m; };
   if (!cat) return err('Choisis une catégorie.');
@@ -1227,7 +1229,9 @@ $('#fOk').addEventListener('click', () => {
   if (!$('#dupPick').hidden && $('#fDup').value) { data = migrate(JSON.parse(JSON.stringify(store.get($('#fDup').value).data))); data.cur = 0; }
   else data = fresh(true, FULL_COURT_CATS.has(cat) ? 'full' : 'half');
   const d = { id: newId(), kind, category: cat, name, teamId: teamId || null, data };
-  store.put(d); closeDialog(); location.hash = '#/s/' + d.id + '/edit';
+  store.put(d); closeDialog();
+  if (pendingBlock) { pendingBlock.newId = d.id; backTo = '#/seance/' + pendingBlock.sess; }
+  location.hash = '#/s/' + d.id + '/edit';
 });
 $('#editInfo').addEventListener('click', () => { const d = store.get(currentId); if (d) openDialog(d.kind, d.id); });
 
@@ -1312,7 +1316,7 @@ function disarmTeam() { clearTimeout(delTeamArmed); delTeamArmed = 0; $('#delTea
 $('#toHome').addEventListener('click', () => { const d = store.get(currentId); location.hash = backTo || (d ? KIND[d.kind].list : '#/'); });
 
 /* ---------- Séances : équipe + date, présences, exercices ---------- */
-let sessId = null, backTo = null, sessDlgId = undefined, itemDlg = null, attOpen = false, autoPlay = false;   // présences repliées par défaut
+let sessId = null, backTo = null, sessDlgId = undefined, itemDlg = null, attOpen = false, absOpen = false, autoPlay = false, pendingBlock = null;   // présences repliées par défaut
 const STATUS = [['present', 'Présent'], ['late', 'En retard'], ['absent', 'Absent'], ['unexcused', 'Absence injustifiée']];
 const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 function closeSessDialogs() { $('#sessDialog').hidden = true; $('#itemDialog').hidden = true; itemDlg = null; sessDlgId = undefined; }
@@ -1393,9 +1397,13 @@ function renderSession() {
   $('#attLbl').textContent = `Présences (${(counts.present || 0) + (counts.late || 0)})`;   // présents = présents + en retard
   $('#attToggle').setAttribute('aria-expanded', attOpen); $('#attBody').hidden = !attOpen;
   $('#attSum').textContent = ps.length ? STATUS.filter(([k]) => counts[k]).map(([k, l]) => `${counts[k]} ${k === 'unexcused' ? 'injustifiée' + (counts[k] > 1 ? 's' : '') : l.toLowerCase() + (counts[k] > 1 && k !== 'late' ? 's' : '')}`).join(' · ') : '';
-  $('#attList').innerHTML = ps.length ? ps.map(p => { const st = att[p.id] || 'present', lbl = STATUS.find(x => x[0] === st)[1];
+  const row = p => { const st = att[p.id] || 'present', lbl = STATUS.find(x => x[0] === st)[1];
     return `<div class="arow"><span class="badges">${posBadges(posOf(p))}</span><span>${esc([p.lastName, p.firstName].filter(Boolean).join(' ') || 'Sans nom')}</span>
-      <button class="st st-${st}" data-att="${p.id}" aria-label="${esc(p.firstName || '')} ${esc(p.lastName || '')} : ${lbl}. Toucher pour changer.">${lbl}</button></div>`; }).join('')
+      <button class="st st-${st}" data-att="${p.id}" aria-label="${esc(p.firstName || '')} ${esc(p.lastName || '')} : ${lbl}. Toucher pour changer.">${lbl}</button></div>`; };
+  const away = st => st === 'absent' || st === 'unexcused';   // absents et injustifiés : rangés en bas, repliés
+  const here = ps.filter(p => !away(att[p.id] || 'present')), gone = ps.filter(p => away(att[p.id]));
+  $('#attList').innerHTML = ps.length ? here.map(row).join('') + (gone.length ? `<button class="grp-h abs-h" data-abs aria-expanded="${absOpen}"><span class="chev">▸</span><span class="lbl">Absents (${gone.length})</span></button>
+      <div class="att" ${absOpen ? '' : 'hidden'}>${gone.map(row).join('')}</div>` : '')
     : `<p>${team ? 'Aucun joueur dans cette équipe : ajoute-les depuis le menu Équipes.' : 'L’équipe de cette séance a été supprimée.'}</p>`;
   const total = items.reduce((n, it) => n + (+it.duration || 0), 0);
   $('#itemSum').textContent = items.length ? `· ${plural(items.length, 'bloc')} · ${total} min` : '';
@@ -1408,6 +1416,7 @@ function renderSession() {
 }
 $('#attToggle').addEventListener('click', () => { attOpen = !attOpen; renderSession(); });
 $('#attList').addEventListener('click', e => {
+  if (e.target.closest('[data-abs]')) { absOpen = !absOpen; return renderSession(); }
   const b = e.target.closest('[data-att]'); if (!b) return;
   editSess(d => { const cur = d.data.attendance[b.dataset.att] || 'present', i = STATUS.findIndex(x => x[0] === cur);
     d.data.attendance[b.dataset.att] = STATUS[(i + 1) % STATUS.length][0]; });
@@ -1425,14 +1434,31 @@ $('#itemList').addEventListener('click', e => {
 });
 
 /* Fenêtre du bloc */
-function fillRefs(type) {                               // schémas existants, groupés par catégorie
+function fillRefs(type) {                               // « créer » en tête, puis les schémas existants groupés par catégorie
   const docs = store.list(type);
-  $('#iRef').innerHTML = docs.length ? [...CATS[type], { k: null, label: 'À classer' }].map(c => {
-    const its = docs.filter(d => (c.k ? d.category === c.k : !catOf(d))).sort(byName);
-    return its.length ? `<optgroup label="${esc(c.label)}">${its.map(d => `<option value="${d.id}">${esc(fullName(d))}</option>`).join('')}</optgroup>` : '';
-  }).join('') : `<option value="">Aucun ${type === 'system' ? 'système' : 'exercice'} pour l’instant</option>`;
-  $('#iAddRef').disabled = !docs.length;
+  $('#iRef').innerHTML = `<option value="__new">+ Créer ${type === 'system' ? 'un nouveau système' : 'un nouvel exercice'}</option>` +
+    [...CATS[type], { k: null, label: 'À classer' }].map(c => {
+      const its = docs.filter(d => (c.k ? d.category === c.k : !catOf(d))).sort(byName);
+      return its.length ? `<optgroup label="${esc(c.label)}">${its.map(d => `<option value="${d.id}">${esc(fullName(d))}</option>`).join('')}</optgroup>` : '';
+    }).join('');
+  const first = $('#iRef').querySelector('optgroup option'); if (first) $('#iRef').value = first.value;
 }
+/* Création d'un schéma depuis le bloc : on garde la saisie, on crée (catégorie, nom… puis dessin),
+   et en revenant (« Terminé ») on retrouve le bloc avec le nouveau schéma ajouté. */
+function blockFields() { return { title: $('#iTitle').value, dur: $('#iDur').value, desc: $('#iDesc').value, obj: $('#iObj').value }; }
+function startNewSchema() {
+  const kind = $('#iType').value;
+  pendingBlock = { sess: sessId, id: itemDlg.id, refs: itemDlg.refs.slice(), fields: blockFields(), kind, newId: null };
+  closeSessDialogs(); openDialog(kind, null);
+}
+function restoreBlock() {
+  const pb = pendingBlock; pendingBlock = null;
+  openItemDialog({ id: pb.id, title: pb.fields.title, duration: pb.fields.dur, description: pb.fields.desc, objectives: pb.fields.obj, refs: pb.refs });
+  if (pb.newId && store.get(pb.newId) && !itemDlg.refs.includes(pb.newId)) itemDlg.refs.push(pb.newId);
+  $('#iTitle').value = pb.fields.title; $('#iType').value = pb.kind; fillRefs(pb.kind); renderRefChips();
+  if (!pb.id) { $('#itTitle').textContent = 'Nouveau bloc d’entraînement'; $('#iOk').textContent = 'Ajouter'; }
+}
+function cancelDocDialog() { closeDialog(); if (pendingBlock && !pendingBlock.newId) restoreBlock(); }
 function renderRefChips() {
   $('#iRefs').innerHTML = itemDlg.refs.map((id, i) => { const d = store.get(id);
     return `<li><span class="item-k">${d && d.kind === 'system' ? 'Système' : 'Exercice'}</span><span class="n">${esc(d ? fullName(d) : 'Schéma supprimé')}</span>
@@ -1440,14 +1466,15 @@ function renderRefChips() {
 }
 function openItemDialog(it) {
   itemDlg = { id: it ? it.id : null, refs: it ? it.refs.slice() : [] };
-  $('#itTitle').textContent = it ? 'Modifier le bloc' : 'Nouveau bloc d’entraînement'; $('#iOk').textContent = it ? 'Enregistrer' : 'Ajouter';
+  $('#itTitle').textContent = it && it.id ? 'Modifier le bloc' : 'Nouveau bloc d’entraînement'; $('#iOk').textContent = it && it.id ? 'Enregistrer' : 'Ajouter';
   $('#iTitle').value = it ? it.title || '' : ''; $('#iDur').value = it ? it.duration : '';
   $('#iDesc').value = it ? it.description || '' : ''; $('#iObj').value = it ? it.objectives || '' : '';
   $('#iErr').textContent = ''; $('#iType').value = 'exercise'; fillRefs('exercise'); renderRefChips();
   $('#itemDialog').hidden = false; $('#iTitle').focus();
 }
 $('#iType').addEventListener('change', () => fillRefs($('#iType').value));
-$('#iAddRef').addEventListener('click', () => { const id = $('#iRef').value; if (id && !itemDlg.refs.includes(id)) { itemDlg.refs.push(id); renderRefChips(); } });
+$('#iAddRef').addEventListener('click', () => { const id = $('#iRef').value; if (id === '__new') return startNewSchema(); if (id && !itemDlg.refs.includes(id)) { itemDlg.refs.push(id); renderRefChips(); } });
+$('#iRef').addEventListener('change', () => { if ($('#iRef').value === '__new') startNewSchema(); });
 $('#iRefs').addEventListener('click', e => { const b = e.target.closest('[data-rmref]'); if (b) { itemDlg.refs.splice(+b.dataset.rmref, 1); renderRefChips(); } });
 $('#iCancel').addEventListener('click', closeSessDialogs);
 $('#itemDialog').addEventListener('click', e => { if (e.target.id === 'itemDialog') closeSessDialogs(); });
@@ -1543,7 +1570,10 @@ async function exportImages() {
   }
 }
 $('#exportImg').addEventListener('click', exportImages);
-$('#done').addEventListener('click', () => { location.hash = '#/s/' + currentId; });
+$('#done').addEventListener('click', () => {
+  if (pendingBlock && pendingBlock.newId === currentId && backTo) { location.hash = backTo; return; }   // schéma créé depuis un bloc
+  location.hash = '#/s/' + currentId;
+});
 
 function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id)); }
 function route() {
@@ -1553,13 +1583,19 @@ function route() {
   const sys = (m = h.match(/^#\/s\/([^/]+)(\/edit)?$/)) && store.get(m[1]);
   if (sys && (sys.kind === 'system' || sys.kind === 'exercise')) return openBoard(sys, !!m[2]);
   currentId = null; backTo = null;
+  if (!/^#\/seance\//.test(h)) pendingBlock = null;   // on a quitté la séance : on oublie le bloc en cours
   if (h === '#/systemes' || h === '#/exercices') { libKind = h === '#/systemes' ? 'system' : 'exercise'; showView('lib'); return renderLib(); }
   if (h === '#/equipes') { showView('teams'); return renderTeams(); }
   const t = (m = h.match(/^#\/equipes\/([^/]+)$/)) && store.get(m[1]);
   if (t && t.kind === 'team') { if (teamId !== t.id) editPid = null; teamId = t.id; showView('team'); return renderTeam(); }
   if (h === '#/seances') { showView('sessions'); return renderSessions(); }
   const se = (m = h.match(/^#\/seance\/([^/]+)$/)) && store.get(m[1]);
-  if (se && se.kind === 'session') { if (sessId !== se.id) attOpen = false; sessId = se.id; showView('session'); return renderSession(); }
+  if (se && se.kind === 'session') {
+    if (sessId !== se.id) attOpen = absOpen = false;
+    sessId = se.id; showView('session'); renderSession();
+    if (pendingBlock && pendingBlock.sess === se.id && pendingBlock.newId) restoreBlock();   // retour après création d'un schéma
+    return;
+  }
   showView('home'); renderMenu(); document.title = 'Coach · EMBT';
 }
 function openBoard(sys, edit) {
