@@ -52,6 +52,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:auto 1fr}
 .tool{display:flex;flex-direction:column;align-items:center;gap:3px;width:68px;padding:7px 0;border:0;border-radius:12px;background:transparent;color:var(--embt-navy);font-weight:600;font-size:.72rem}
 .tool svg{width:24px;height:24px}
 .tool[aria-pressed="true"]{background:var(--embt-red);color:var(--embt-cream)}
+.tool[aria-pressed="true"] svg [stroke="#961321"]{stroke:var(--embt-cream)}.tool[aria-pressed="true"] svg [fill="#961321"]{fill:var(--embt-cream)}
+#board[data-kind="exercise"] .sys-only,#board[data-kind="system"] .ex-only{display:none}
 .sep{height:1px;background:var(--line);margin:6px 6px;flex:0 0 auto}
 .stage{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:10px}
 .board{display:flex;justify-content:center;position:relative}
@@ -180,6 +182,17 @@ a.hbtn{text-decoration:none;display:inline-block}
 .schema .cap{font-weight:800;font-size:.88rem;line-height:1.35}
 .schema .cap small{font-weight:600;opacity:.75}
 .schema.gone{cursor:default;opacity:.6;padding:14px;text-align:center}
+.teams-h{font-size:.78rem;margin-top:4px}
+.teams-body[hidden]{display:none}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}
+.tcol{border:1px solid var(--line);border-top:4px solid var(--embt-navy);border-radius:8px;background:var(--embt-cream);padding:8px;display:flex;flex-direction:column;gap:4px}
+.tcol:nth-child(2){border-top-color:var(--embt-red)}.tcol:nth-child(3){border-top-color:var(--embt-gold)}.tcol:nth-child(4){border-top-color:#5A6B78}
+.tname{font-family:var(--font-title);font-weight:900}
+.tname small{font-family:var(--font-body);font-weight:600}
+.tp{display:flex;align-items:center;gap:8px;border:0;border-radius:6px;background:#fff;color:var(--embt-navy);padding:5px 6px;text-align:left;font-weight:600}
+.tp:hover{outline:1px solid var(--embt-navy)}
+.tp .badge{width:22px;height:22px;font-size:.78rem}
+.tfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
 .refs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-weight:600}
 .refs li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 6px 6px 10px}
 .refs li span.n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -306,12 +319,15 @@ a.hbtn{text-decoration:none;display:inline-block}
     <nav class="tools edit-only" aria-label="Outils">
       <button class="tool" data-tool="select"><svg viewBox="0 0 24 24"><path d="M6 3l12 7-5.5 1.6L10 17z" fill="currentColor"/></svg>Déplacer</button>
       <div class="sep"></div>
-      <button class="tool" data-tool="O"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Inter,Arial,sans-serif">1</text></svg>Attaquant</button>
-      <button class="tool" data-tool="X"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Défenseur</button>
+      <button class="tool sys-only" data-tool="O"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Inter,Arial,sans-serif">1</text></svg>Attaquant</button>
+      <button class="tool sys-only" data-tool="X"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Défenseur</button>
+      <button class="tool ex-only" data-tool="P"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Joueur</button>
+      <button class="tool ex-only" data-tool="cone"><svg viewBox="0 0 24 24"><path d="M12 4l7 14H5z" fill="currentColor"/><path d="M3 19h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Plot</button>
       <button class="tool" data-tool="ball"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 12h17M12 3.5v17M6.3 5.8c3.2 3.4 3.2 9 0 12.4M17.7 5.8c-3.2 3.4-3.2 9 0 12.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Ballon</button>
       <div class="sep"></div>
       <button class="tool" data-tool="move"><svg viewBox="0 0 24 24"><path d="M2 12h15" stroke="currentColor" stroke-width="2.2"/><path d="M22 12l-6.5-4v8z" fill="currentColor"/></svg>Course</button>
       <button class="tool" data-tool="pass"><svg viewBox="0 0 24 24"><path d="M2 12h15" stroke="currentColor" stroke-width="2.2" stroke-dasharray="3 2.4"/><path d="M22 12l-6.5-4v8z" fill="currentColor"/></svg>Passe</button>
+      <button class="tool sys-only" data-tool="ppass"><svg viewBox="0 0 24 24"><path d="M2 12h15" stroke="#961321" stroke-width="2.2" stroke-dasharray="2 2"/><path d="M22 12l-6.5-4v8z" fill="#961321"/></svg>Passe possible</button>
       <button class="tool" data-tool="dribble"><svg viewBox="0 0 24 24"><path d="M2 12l2-3.5 2.5 7 2.5-7 2.5 7 2.5-3.5h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 12l-6.5-4v8z" fill="currentColor"/></svg>Dribble</button>
       <button class="tool" data-tool="screen"><svg viewBox="0 0 24 24"><path d="M2 12h17M19 5.5v13" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Écran</button>
       <div class="sep"></div>
@@ -387,6 +403,9 @@ a.hbtn{text-decoration:none;display:inline-block}
         <button type="button" class="btn" id="iAddRef">+ Ajouter</button>
       </div>
     </div>
+    <label class="field">Équipes<select id="iTeams">
+      <option value="0">Pas d’équipes</option><option value="2">2 équipes</option><option value="3">3 équipes</option><option value="4">4 équipes</option>
+    </select></label>
     <label class="field"><span>Description <span class="hint">(facultatif)</span></span><textarea id="iDesc" rows="3"></textarea></label>
     <label class="field"><span>Objectifs <span class="hint">(facultatif)</span></span><textarea id="iObj" rows="2"></textarea></label>
     <p class="err" id="iErr" role="alert"></p>
@@ -404,6 +423,10 @@ const HELP = {
   O: 'Touche le terrain pour placer un attaquant (5 maximum).',
   X: 'Touche le terrain pour placer un défenseur (5 maximum).',
   ball: 'Touche un attaquant pour lui donner le ballon.',
+  ballEx: 'Touche un joueur pour lui donner ou retirer un ballon, ou le terrain pour poser un ballon.',
+  P: 'Touche le terrain pour placer un joueur (autant que tu veux).',
+  cone: 'Touche le terrain pour poser un plot.',
+  ppass: 'Glisse depuis le porteur jusqu’à un coéquipier : passe possible, sans effet sur le ballon.',
   move: 'Glisse depuis un joueur jusqu’à sa destination.',
   pass: 'Glisse depuis le porteur du ballon jusqu’à un coéquipier.',
   dribble: 'Glisse depuis le porteur du ballon jusqu’à l’arrivée du dribble.',
@@ -617,7 +640,7 @@ function depthOf(b) { let d = 0; for (let j = 1; j <= b.j; j++) if (path[j - 1].
 function newId() { return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function save() { if (mode !== 'edit') return; const sys = store.get(currentId); if (sys) { sys.data = state; store.put(sys); } }
 
-let currentId = null, mode = 'view';
+let currentId = null, mode = 'view', docKind = 'system';
 let state = fresh(true);
 let tool = 'select', sel = null, drag = null, draft = null, anim = null, raf = 0, hintTimer = 0;
 let undoStack = [];
@@ -632,27 +655,40 @@ const maxY = () => state.court === 'half' ? 14.6 : 28.4;
 const clampP = p => ({ x: Math.max(-0.5, Math.min(15.5, p.x)), y: Math.max(-0.5, Math.min(maxY(), p.y)) });
 
 /* ---------- modèle dérivé : positions de chaque étape ---------- */
-const moveOf = (k, id) => path[k].actions.find(a => a.actor === id && a.type !== 'pass');
+const MOVES = new Set(['move', 'dribble', 'screen']);   // « pass » déplace le ballon ; « ppass » (passe possible) est indicative
+const moveOf = (k, id) => path[k].actions.find(a => a.actor === id && MOVES.has(a.type));
 const passOf = k => path[k].actions.find(a => a.type === 'pass');
+const passesOf = k => path[k].actions.filter(a => a.type === 'pass');
+const startBalls = () => (Array.isArray(state.balls0) ? state.balls0.slice() : state.ball0 ? [state.ball0] : []);   // exercices : plusieurs porteurs
 function derive() {
-  const out = []; let pos = {}, ball = state.ball0;
+  const out = []; let pos = {}, balls = startBalls();
   for (const id in state.pos0) pos[id] = { ...state.pos0[id] };
   for (let k = 0; k < path.length; k++) {
     const end = {};
     for (const id in pos) { const m = moveOf(k, id); end[id] = m ? { ...m.to } : { ...pos[id] }; }
-    out.push({ pos, ball, end });
-    const p = passOf(k); if (p && pos[p.target]) ball = p.target;
+    out.push({ pos, balls, ball: balls[0], end });
+    balls = balls.slice();
+    for (const p of passesOf(k)) { const i = balls.indexOf(p.actor); if (i >= 0 && pos[p.target]) balls[i] = p.target; }
     pos = end;
   }
-  out.final = { pos, ball };
+  out.final = { pos, balls, ball: balls[0] };
   return out;
+}
+const ballAt = q => ({ x: q.x + 0.38, y: q.y - 0.38 });
+function objSVG(o, selected) {                           // plots et ballons posés au sol (exercices)
+  const ring = selected ? `<circle cx="${fx(o.x)}" cy="${fx(o.y)}" r="0.5" fill="${GOLD}"/>` : '';
+  const body = o.type === 'cone'
+    ? `<g${upright(o.x, o.y)}><path d="M${fx(o.x)} ${fx(o.y - 0.34)}L${fx(o.x + 0.3)} ${fx(o.y + 0.22)}L${fx(o.x - 0.3)} ${fx(o.y + 0.22)}Z" fill="${GOLD}" stroke="${NAVY}" stroke-width="0.05" stroke-linejoin="round"/>
+       <path d="M${fx(o.x - 0.36)} ${fx(o.y + 0.24)}H${fx(o.x + 0.36)}" stroke="${NAVY}" stroke-width="0.07" stroke-linecap="round"/></g>`
+    : ballSVG(o);
+  return `<g data-k="obj" data-id="${o.id}">${ring}<circle cx="${fx(o.x)}" cy="${fx(o.y)}" r="0.42" fill="transparent" pointer-events="all"/>${body}</g>`;
 }
 
 /* ---------- géométrie des flèches (Bézier quadratique) ---------- */
 function geom(a, F) {
   const from = F.pos[a.actor]; if (!from) return null;
   let to = a.to;
-  if (a.type === 'pass' && a.target && F.end[a.target]) to = F.end[a.target];
+  if ((a.type === 'pass' || a.type === 'ppass') && a.target && F.end[a.target]) to = F.end[a.target];
   const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2, dx = to.x - from.x, dy = to.y - from.y;
   const L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
   return { from, to, mx, my, nx, ny, c: { x: mx + nx * 2 * a.bend, y: my + ny * 2 * a.bend }, mid: { x: mx + nx * a.bend, y: my + ny * a.bend } };
@@ -661,12 +697,12 @@ function qpt(p0, c, p2, t) { const u = 1 - t; return { x: u * u * p0.x + 2 * u *
 
 function actionSVG(a, F, o = {}) {
   const g = geom(a, F); if (!g) return '';
-  const color = NAVY;
+  const color = a.type === 'ppass' ? RED : NAVY, isPass = a.type === 'pass' || a.type === 'ppass';
   const n = Math.max(40, Math.ceil((dist(g.from, g.to) + Math.abs(a.bend) * 2) / 0.04));
   let pts = [];
   for (let i = 0; i <= n; i++) pts.push(qpt(g.from, g.c, g.to, i / n));
   pts = pts.filter(p => dist(p, g.from) > R + 0.08);
-  if (a.type === 'pass') pts = pts.filter(p => dist(p, g.to) > R + 0.12);
+  if (isPass) pts = pts.filter(p => dist(p, g.to) > R + 0.12);
   if (pts.length < 4) return '';
   const tip = pts[pts.length - 1], back = pts[Math.max(0, pts.length - 6)];
   let dx = tip.x - back.x, dy = tip.y - back.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
@@ -692,7 +728,7 @@ function actionSVG(a, F, o = {}) {
     const bx = tip.x - dx * HL, by = tip.y - dy * HL;
     head = `<path d="M${fx(tip.x)} ${fx(tip.y)}L${fx(bx + px * .24)} ${fx(by + py * .24)}L${fx(bx - px * .24)} ${fx(by - py * .24)}Z" fill="${color}"/>`;
   }
-  const dash = a.type === 'pass' ? ' stroke-dasharray="0.28 0.2"' : '';
+  const dash = a.type === 'pass' ? ' stroke-dasharray="0.28 0.2"' : a.type === 'ppass' ? ' stroke-dasharray="0.16 0.14"' : '';
   const isSel = o.interactive && sel && sel.kind === 'action' && sel.id === a.id;
   return `<g ${o.interactive ? `data-k="action" data-id="${a.id}"` : 'pointer-events="none"'} opacity="${o.opacity ?? 1}">
     ${o.interactive ? `<path d="${d}" stroke="transparent" stroke-width="0.8" fill="none" pointer-events="stroke"/>` : ''}
@@ -726,6 +762,11 @@ function playerSVG(pl, p, selected) {
     return `<g data-k="player" data-id="${pl.id}">${ring}<circle cx="${fx(p.x)}" cy="${fx(p.y)}" r="${R}" fill="${NAVY}" stroke="${CREAM}" stroke-width="0.07"/>
       <text x="${fx(p.x)}" y="${fx(p.y)}"${upright(p.x, p.y)} font-size="0.5" fill="${CREAM}" ${txt} pointer-events="none">${pl.num}</text></g>`;
   }
+  if (pl.team === 'P') {
+    const a = 0.26, x = `M${fx(p.x - a)} ${fx(p.y - a)}L${fx(p.x + a)} ${fx(p.y + a)}M${fx(p.x + a)} ${fx(p.y - a)}L${fx(p.x - a)} ${fx(p.y + a)}`;
+    return `<g data-k="player" data-id="${pl.id}">${ring}<circle cx="${fx(p.x)}" cy="${fx(p.y)}" r="0.5" fill="transparent" pointer-events="all"/>
+      <path d="${x}" stroke="${CREAM}" stroke-width="0.3" stroke-linecap="round"/><path d="${x}" stroke="${NAVY}" stroke-width="0.15" stroke-linecap="round"/></g>`;
+  }
   const a = 0.28, x = `M${fx(p.x - a)} ${fx(p.y - a)}L${fx(p.x + a)} ${fx(p.y + a)}M${fx(p.x + a)} ${fx(p.y - a)}L${fx(p.x - a)} ${fx(p.y + a)}`;
   return `<g data-k="player" data-id="${pl.id}">${ring}<circle cx="${fx(p.x)}" cy="${fx(p.y)}" r="0.5" fill="transparent" pointer-events="all"/>
     <path d="${x}" stroke="${CREAM}" stroke-width="0.28" stroke-linecap="round"/>
@@ -739,7 +780,7 @@ function ballSVG(p) {
 function handlesSVG(a, F) {
   const g = geom(a, F); if (!g) return '';
   let s = '';
-  if (a.type !== 'pass') s += `<circle data-k="h-to" data-id="${a.id}" cx="${fx(g.to.x)}" cy="${fx(g.to.y)}" r="0.3" fill="${CREAM}" stroke="${NAVY}" stroke-width="0.07"/>`;
+  if (a.type !== 'pass' && a.type !== 'ppass') s += `<circle data-k="h-to" data-id="${a.id}" cx="${fx(g.to.x)}" cy="${fx(g.to.y)}" r="0.3" fill="${CREAM}" stroke="${NAVY}" stroke-width="0.07"/>`;
   s += `<circle data-k="h-bend" data-id="${a.id}" cx="${fx(g.mid.x)}" cy="${fx(g.mid.y)}" r="0.3" fill="${GOLD}" stroke="${NAVY}" stroke-width="0.07"/>`;
   return s;
 }
@@ -747,27 +788,27 @@ function handlesSVG(a, F) {
 function renderDyn() {
   if (!path.length) return;
   const frames = derive(), k = anim ? anim.k : state.cur, F = frames[k], acts = path[k].actions;
-  let pos = F.pos, ballP = null, holder = F.ball, html = '';
+  let pos = F.pos, html = '', balls = F.balls, ballPts = [];
   if (!anim && k > 0 && mode === 'edit') html += path[k - 1].actions.map(a => actionSVG(a, frames[k - 1], { opacity: 0.18 })).join('');
   if (anim) {
-    if (anim.final) { pos = frames.final.pos; holder = frames.final.ball; }
+    if (anim.final) { pos = frames.final.pos; balls = frames.final.balls; }
     else {
       pos = {};
       for (const id in F.pos) {
         const m = moveOf(k, id), g = m && geom(m, F);
         pos[id] = g ? qpt(g.from, g.c, g.to, anim.t) : F.pos[id];
       }
-      const p = passOf(k), g = p && geom(p, F);
-      if (g) ballP = qpt(g.from, g.c, g.to, anim.t);
-      if (mode === 'edit') html += acts.map(a => actionSVG(a, F, { opacity: 0.28 })).join('');
+      for (const p of passesOf(k)) { const g = F.balls.includes(p.actor) && geom(p, F); if (g) ballPts.push({ from: p.actor, q: qpt(g.from, g.c, g.to, anim.t) }); }
+      if (anim.pp) html += acts.filter(a => a.type === 'ppass').map(a => actionSVG(a, F)).join('');   // pause « passes possibles »
+      else if (mode === 'edit') html += acts.map(a => actionSVG(a, F, { opacity: 0.28 })).join('');
     }
   } else if (mode === 'edit') {
     html += acts.map(a => actionSVG(a, F, { interactive: true })).join('');
   }
   if (draft) html += actionSVG(draft, F, { opacity: 0.85 });
+  for (const o of state.objs || []) html += objSVG(o, !anim && sel && sel.kind === 'obj' && sel.id === o.id);
   for (const pl of state.players) if (pos[pl.id]) html += playerSVG(pl, pos[pl.id], !anim && sel && sel.kind === 'player' && sel.id === pl.id);
-  if (!ballP && holder && pos[holder]) ballP = { x: pos[holder].x + 0.38, y: pos[holder].y - 0.38 };
-  if (ballP) html += ballSVG(ballP);
+  for (const h of balls) { const moving = ballPts.find(b => b.from === h); if (moving) html += ballSVG(moving.q); else if (pos[h]) html += ballSVG(ballAt(pos[h])); }
   if (!anim && sel && sel.kind === 'action') { const a = acts.find(x => x.id === sel.id); if (a) html += handlesSVG(a, F); }
   dyn.innerHTML = html;
 }
@@ -796,7 +837,7 @@ function updateUI() {
   $('#delStep').disabled = busy || (n === 1 && !path[0].children.length);
   $('#undo').disabled = busy || !undoStack.length;
   $('#play').textContent = anim ? '■ Stop' : '▶ Lecture';
-  if (!hintTimer) $('#status').textContent = mode === 'edit' ? HELP[tool] : 'Appuie sur Lecture pour voir le système.';
+  if (!hintTimer) $('#status').textContent = mode === 'edit' ? HELP[tool === 'ball' && docKind === 'exercise' ? 'ballEx' : tool] : 'Appuie sur Lecture pour voir le système.';
 }
 function renderAll() { renderCourt(); renderDyn(); updateUI(); }
 function hint(msg) {
@@ -807,7 +848,7 @@ function hint(msg) {
 /* ---------- mutations ---------- */
 function addPlayer(team, p) {
   const same = state.players.filter(x => x.team === team);
-  if (same.length >= 5) return hint(team === 'O' ? 'Il y a déjà 5 attaquants.' : 'Il y a déjà 5 défenseurs.');
+  if (team !== 'P' && same.length >= 5) return hint(team === 'O' ? 'Il y a déjà 5 attaquants.' : 'Il y a déjà 5 défenseurs.');
   commit();
   const used = new Set(same.map(x => x.num)); let num = 1; while (used.has(num)) num++;
   const id = uid(); state.players.push({ id, team, num }); state.pos0[id] = clampP(p);
@@ -818,31 +859,41 @@ function removePlayer(id) {
   commit();
   state.players = state.players.filter(p => p.id !== id); delete state.pos0[id];
   if (state.ball0 === id) state.ball0 = null;
+  if (Array.isArray(state.balls0)) state.balls0 = state.balls0.filter(b => b !== id);
   Object.values(state.nodes).forEach(f => f.actions = f.actions.filter(a => a.actor !== id && a.target !== id));
   sel = null; save();
 }
 function removeAction(id) {
   commit(); Object.values(state.nodes).forEach(f => f.actions = f.actions.filter(a => a.id !== id)); sel = null; save();
 }
+function addObj(type, p) { commit(); (state.objs || (state.objs = [])).push({ id: uid(), type, ...clampP(p) }); save(); }
+function removeObj(id) { commit(); state.objs = (state.objs || []).filter(o => o.id !== id); sel = null; save(); }
+function toggleBall(id) {                                 // exercices : donner / retirer un ballon à un joueur
+  commit(); const b = startBalls(), i = b.indexOf(id); if (i >= 0) b.splice(i, 1); else b.push(id);
+  state.balls0 = b; state.ball0 = null; save();
+}
 function findAction(id) { return path[state.cur].actions.find(a => a.id === id); }
 function finishDraft() {
   const F = derive()[state.cur], from = F.pos[draft.actor];
   if (!from || dist(from, draft.to) < 0.6) return;
   const f = path[state.cur];
-  if (draft.type === 'pass') {
+  if (draft.type === 'pass' || draft.type === 'ppass') {
     let target = null, bd = 1.3;
+    const mates = docKind === 'exercise' ? (id => teamOf(id) !== 'X') : (id => teamOf(id) === 'O');
     for (const [id, q] of Object.entries(F.end)) {
-      if (id === draft.actor || teamOf(id) !== 'O') continue;
+      if (id === draft.actor || !mates(id)) continue;
       const d = dist(q, draft.to); if (d < bd) { bd = d; target = id; }
     }
     if (!target) return hint('Termine la passe sur un coéquipier.');
     commit();
-    f.actions = f.actions.filter(a => a.type !== 'pass');
-    const a = { id: uid(), type: 'pass', actor: draft.actor, target, to: { ...F.end[target] }, bend: 0 };
+    if (draft.type === 'ppass') f.actions = f.actions.filter(a => !(a.type === 'ppass' && a.actor === draft.actor && a.target === target));
+    else if (docKind === 'exercise') f.actions = f.actions.filter(a => !(a.type === 'pass' && a.actor === draft.actor));   // une passe par porteur
+    else f.actions = f.actions.filter(a => a.type !== 'pass');
+    const a = { id: uid(), type: draft.type, actor: draft.actor, target, to: { ...F.end[target] }, bend: 0 };
     f.actions.push(a); sel = { kind: 'action', id: a.id };
   } else {
     commit();
-    f.actions = f.actions.filter(a => !(a.actor === draft.actor && a.type !== 'pass'));
+    f.actions = f.actions.filter(a => !(a.actor === draft.actor && MOVES.has(a.type)));
     const a = { id: uid(), type: draft.type, actor: draft.actor, to: clampP(draft.to), bend: 0 };
     f.actions.push(a); sel = { kind: 'action', id: a.id };
   }
@@ -867,23 +918,32 @@ svg.addEventListener('pointerdown', e => {
         sel = { kind: 'player', id };
         if (state.cur === 0) { commit(); drag = { type: 'player', id, dx: state.pos0[id].x - p.x, dy: state.pos0[id].y - p.y }; }
         else hint('Les positions se règlent à l’étape 1. Ici, fais bouger le joueur avec une flèche.');
+      } else if (k === 'obj') {
+        sel = { kind: 'obj', id }; const o = state.objs.find(x => x.id === id);
+        commit(); drag = { type: 'obj', id, dx: o.x - p.x, dy: o.y - p.y };
       } else if (k === 'action') sel = { kind: 'action', id };
       else sel = null;
       break;
-    case 'O': case 'X': addPlayer(tool, p); break;
+    case 'O': case 'X': case 'P': addPlayer(tool, p); break;
+    case 'cone': addObj('cone', p); break;
     case 'ball':
+      if (docKind === 'exercise') {
+        if (k === 'player') { if (state.cur !== 0) { hint('Les ballons se donnent à l’étape 1, ensuite ils suivent les passes.'); break; } toggleBall(id); }
+        else if (k !== 'obj') addObj('ball', p);
+        break;
+      }
       if (k !== 'player') break;
       if (teamOf(id) !== 'O') { hint('Le ballon va à un attaquant.'); break; }
       if (state.cur !== 0) { hint('Le ballon se place à l’étape 1, ensuite il suit les passes.'); break; }
       commit(); state.ball0 = id; save(); break;
     case 'eraser':
-      if (k === 'player') removePlayer(id); else if (k === 'action') removeAction(id);
+      if (k === 'player') removePlayer(id); else if (k === 'action') removeAction(id); else if (k === 'obj') removeObj(id);
       break;
     default: {
       let actor = k === 'player' ? id : null;
       if (!actor) { let bd = 0.8; for (const [pid, q] of Object.entries(F.pos)) { const d = dist(q, p); if (d < bd) { bd = d; actor = pid; } } }
       if (!actor) { hint('Pars d’un joueur pour tracer.'); break; }
-      if ((tool === 'pass' || tool === 'dribble') && F.ball !== actor) { hint(tool === 'pass' ? 'Seul le porteur du ballon peut passer.' : 'Seul le porteur du ballon peut dribbler.'); break; }
+      if ((tool === 'pass' || tool === 'ppass' || tool === 'dribble') && !F.balls.includes(actor)) { hint(tool === 'dribble' ? 'Seul un porteur de ballon peut dribbler.' : 'Seul un porteur de ballon peut passer.'); break; }
       draft = { type: tool, actor, to: p, bend: 0 };
     }
   }
@@ -894,6 +954,7 @@ svg.addEventListener('pointermove', e => {
   const p = clampP(svgPoint(e));
   if (draft) draft.to = p;
   else if (drag.type === 'player') state.pos0[drag.id] = clampP({ x: p.x + drag.dx, y: p.y + drag.dy });
+  else if (drag.type === 'obj') { const o = state.objs.find(x => x.id === drag.id); if (o) Object.assign(o, clampP({ x: p.x + drag.dx, y: p.y + drag.dy })); }
   else {
     const a = findAction(drag.id); if (!a) return;
     if (drag.type === 'h-to') a.to = p;
@@ -1027,7 +1088,7 @@ $('#play').addEventListener('click', () => {
   sel = null; draft = null;
   const view = mode === 'view', D = 1300, back = state.cur;
   const above = view ? branchAt(state.cur) : null;        // déjà dans une option : la fin ramène à sa bifurcation
-  let k = view ? state.cur : 0, t0 = null, lastFork = above ? above.j - 1 : -1;
+  let k = view ? state.cur : 0, t0 = null, lastFork = above ? above.j - 1 : -1, ppDone = -1;
   anim = { k, t: 0 }; updateUI();
   const pauseAt = () => {                                 // bifurcation : pause, on choisit l'option
     const node = path[k];
@@ -1048,12 +1109,19 @@ $('#play').addEventListener('click', () => {
     }, 1000);
   };
   const step = ts => {
-    if (!anim || anim.paused) return;
-    if (t0 === null) t0 = ts;
+    if (!anim || anim.paused || anim.pp) return;
+    if (t0 === null) {
+      if (ppDone !== k && path[k].actions.some(a => a.type === 'ppass')) {      // passes possibles : affichées 1 s, puis on enchaîne
+        ppDone = k; anim.k = k; anim.t = 0; anim.pp = true; renderDyn(); updateUI();
+        setTimeout(() => { if (!anim || !anim.pp) return; anim.pp = false; raf = requestAnimationFrame(step); }, 1000);
+        return;
+      }
+      t0 = ts;
+    }
     let t = (ts - t0) / D;
     if (t >= 1) {
       if (view && path[k].children.length > 1) return pauseAt();
-      k++; t0 = ts; t = 0;
+      k++; t0 = null; t = 0;
       if (k >= path.length) return finish();
     }
     anim.k = k; anim.t = ease(t); renderDyn(); updateUI();
@@ -1069,7 +1137,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { draft = null; sel = null; renderDyn(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !anim) {
     e.preventDefault();
-    if (sel.kind === 'player') removePlayer(sel.id); else removeAction(sel.id);
+    if (sel.kind === 'player') removePlayer(sel.id); else if (sel.kind === 'obj') removeObj(sel.id); else removeAction(sel.id);
     renderDyn(); updateUI();
   }
 });
@@ -1227,7 +1295,7 @@ $('#fOk').addEventListener('click', () => {
   }
   let data;
   if (!$('#dupPick').hidden && $('#fDup').value) { data = migrate(JSON.parse(JSON.stringify(store.get($('#fDup').value).data))); data.cur = 0; }
-  else data = fresh(true, FULL_COURT_CATS.has(cat) ? 'full' : 'half');
+  else data = fresh(kind === 'system', FULL_COURT_CATS.has(cat) ? 'full' : 'half');   // exercice : terrain vide (joueurs, ballons, plots à poser)
   const d = { id: newId(), kind, category: cat, name, teamId: teamId || null, data };
   store.put(d); closeDialog();
   if (pendingBlock) { pendingBlock.newId = d.id; backTo = '#/seance/' + pendingBlock.sess; }
@@ -1361,7 +1429,7 @@ function editSess(fn) { const d = store.get(sessId); if (d) { fn(d); store.put(d
 /* Blocs d'entraînement : titre, durée, description, objectifs et 0..n schémas (exercices ou systèmes).
    Ancien format (un exercice par élément) converti à la volée. */
 function blockOf(it) {
-  if (Array.isArray(it.refs)) return it;
+  if (Array.isArray(it.refs)) return it;   // nouveau format (équipes éventuelles : nTeams, teams = [[ids]…])
   const b = { id: it.id, title: it.title || '', duration: it.duration, description: it.description || '', objectives: it.objectives || '', refs: it.refId ? [it.refId] : [] };
   if (!b.title && it.refId && store.get(it.refId)) b.title = fullName(store.get(it.refId));
   return b;
@@ -1374,7 +1442,8 @@ function schemaSVG(doc) {
     const F = derive()[0], c = COURT_IMG[state.court] || COURT_IMG.half;
     let h = '';                                          // point de départ seulement : joueurs et ballon, sans flèches
     for (const pl of state.players) if (F.pos[pl.id]) h += playerSVG(pl, F.pos[pl.id], false);
-    if (F.ball && F.pos[F.ball]) h += ballSVG({ x: F.pos[F.ball].x + 0.38, y: F.pos[F.ball].y - 0.38 });
+    for (const o of state.objs || []) h += objSVG(o, false);
+    for (const b of F.balls) if (F.pos[b]) h += ballSVG(ballAt(F.pos[b]));
     const meta = leavesOf(state).length > 1 ? plural(leavesOf(state).length, 'option') : plural(path.length, 'étape');
     return { meta, svg: `<svg viewBox="${c.x} ${c.y} ${c.w} ${c.h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><image href="${c.src}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" preserveAspectRatio="none"/><g${state.court === 'full' ? ` transform="${FULL_ROT}"` : ''}>${h}</g></svg>` };
   } finally { state = keepState; path = keepPath; }
@@ -1411,6 +1480,7 @@ function renderSession() {
       <div class="item-main"><span class="item-t">${esc(it.title || 'Sans titre')}</span><span class="item-d">${+it.duration || 0} min</span></div>
       ${it.description ? `<p class="item-x"><b>Description :</b> ${esc(it.description)}</p>` : ''}${it.objectives ? `<p class="item-x"><b>Objectifs :</b> ${esc(it.objectives)}</p>` : ''}
       ${it.refs.length ? `<div class="schemas">${it.refs.map(schemaCard).join('')}</div>` : ''}
+      ${teamsHTML(it, d)}
       <div class="item-act"><button class="icon" data-iup aria-label="Monter" ${i ? '' : 'disabled'}>↑</button><button class="icon" data-idown aria-label="Descendre" ${i < items.length - 1 ? '' : 'disabled'}>↓</button>
         <button class="icon" data-iedit aria-label="Modifier">✎</button><button class="icon" data-idel aria-label="Retirer">×</button></div></li>`).join('');
 }
@@ -1423,6 +1493,16 @@ $('#attList').addEventListener('click', e => {
   renderSession();
 });
 $('#itemList').addEventListener('click', e => {
+  const tg = e.target.closest('[data-tg]'); if (tg) { openTeams.has(tg.dataset.tg) ? openTeams.delete(tg.dataset.tg) : openTeams.add(tg.dataset.tg); return renderSession(); }
+  const mvb = e.target.closest('[data-mv]');
+  if (mvb) {
+    const itemId = mvb.closest('[data-item]').dataset.item;
+    setTeams(itemId, (b, d) => { const t = effTeams(b, d), from = +mvb.dataset.ti, to = (from + 1) % t.length;
+      t[from] = t[from].filter(x => x !== mvb.dataset.mv); t[to].push(mvb.dataset.mv); return t; });
+    return renderSession();
+  }
+  const rt = e.target.closest('[data-reteam]');
+  if (rt) { setTeams(rt.dataset.reteam, (b, d) => makeTeams(presentPlayers(d), b.nTeams)); return renderSession(); }
   const v = e.target.closest('[data-view]'); if (v) { backTo = location.hash; autoPlay = true; location.hash = '#/s/' + v.dataset.view; return; }
   const li = e.target.closest('[data-item]'); if (!li) return;
   const d = store.get(sessId), i = d.data.items.findIndex(x => x.id === li.dataset.item);
@@ -1432,6 +1512,50 @@ $('#itemList').addEventListener('click', e => {
   if (mv) editSess(x => { const [m] = x.data.items.splice(i, 1); x.data.items.splice(i + mv, 0, m); });
   renderSession();
 });
+
+/* Équipes d'un bloc : réparties parmi les présents (et retardataires), équilibrées par poste principal. */
+const TEAM_NAMES = ['Équipe A', 'Équipe B', 'Équipe C', 'Équipe D'];
+const openTeams = new Set();
+function presentPlayers(sess) {
+  const team = sess && store.get(sess.teamId); if (!team) return [];
+  return (team.data.players || []).filter(p => { const st = (sess.data.attendance || {})[p.id] || 'present'; return st === 'present' || st === 'late'; });
+}
+function makeTeams(players, n) {
+  const teams = Array.from({ length: n }, () => []), cnt = Array.from({ length: n }, () => ({}));
+  const shuffled = players.map(p => [Math.random(), p]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  shuffled.sort((a, b) => { const ka = posKey(a), kb = posKey(b); return ka[0] - kb[0] || ka[1] - kb[1] || ka[2] - kb[2]; });
+  for (const p of shuffled) {                            // chaque joueur va dans l'équipe qui a le moins de ce poste, puis le moins de joueurs
+    const main = posOf(p)[0] || 0; let best = 0;
+    for (let i = 1; i < n; i++) {
+      const a = cnt[i][main] || 0, b = cnt[best][main] || 0;
+      if (a < b || (a === b && teams[i].length < teams[best].length)) best = i;
+    }
+    teams[best].push(p.id); cnt[best][main] = (cnt[best][main] || 0) + 1;
+  }
+  return teams;
+}
+function effTeams(it, sess) {                            // absents retirés, nouveaux présents ajoutés à la plus petite équipe
+  const here = presentPlayers(sess), ids = new Set(here.map(p => p.id));
+  const t = it.teams.map(x => x.filter(id => ids.has(id)));
+  for (const p of here) if (!t.some(x => x.includes(p.id))) t.reduce((m, x) => (x.length < m.length ? x : m), t[0]).push(p.id);
+  return t;
+}
+function teamsHTML(it, sess) {
+  if (!it.nTeams || !it.teams) return '';
+  const team = store.get(sess.teamId); if (!team) return '';
+  const t = effTeams(it, sess), open = openTeams.has(it.id);
+  const pl = id => (team.data.players || []).find(p => p.id === id) || {};
+  return `<button class="grp-h teams-h" data-tg="${it.id}" aria-expanded="${open}"><span class="chev">▸</span><span class="lbl">Équipes (${t.length})</span></button>
+    <div class="teams-body" ${open ? '' : 'hidden'}>
+      <div class="tgrid">${t.map((ids, ti) => `<div class="tcol"><div class="tname">${TEAM_NAMES[ti]} <small>(${ids.length})</small></div>
+        ${ids.slice().sort((a, b) => (pl(a).firstName || pl(a).lastName || '').localeCompare(pl(b).firstName || pl(b).lastName || '', 'fr')).map(id => { const p = pl(id);
+          return `<button class="tp" data-mv="${id}" data-ti="${ti}" title="Passer dans l’équipe suivante"><span class="tpn">${esc(p.firstName || p.lastName || 'Sans nom')}</span></button>`; }).join('')}</div>`).join('')}</div>
+      <div class="tfoot"><span>Touche un joueur pour le passer dans l’équipe suivante.</span><button class="btn" data-reteam="${it.id}">↻ Refaire les équipes</button></div>
+    </div>`;
+}
+function setTeams(itemId, fn) {
+  editSess(d => { const i = d.data.items.findIndex(x => x.id === itemId); if (i < 0) return; const b = { ...blockOf(d.data.items[i]) }; b.teams = fn(b, d); d.data.items[i] = b; });
+}
 
 /* Fenêtre du bloc */
 function fillRefs(type) {                               // « créer » en tête, puis les schémas existants groupés par catégorie
@@ -1445,7 +1569,7 @@ function fillRefs(type) {                               // « créer » en tête
 }
 /* Création d'un schéma depuis le bloc : on garde la saisie, on crée (catégorie, nom… puis dessin),
    et en revenant (« Terminé ») on retrouve le bloc avec le nouveau schéma ajouté. */
-function blockFields() { return { title: $('#iTitle').value, dur: $('#iDur').value, desc: $('#iDesc').value, obj: $('#iObj').value }; }
+function blockFields() { return { title: $('#iTitle').value, dur: $('#iDur').value, desc: $('#iDesc').value, obj: $('#iObj').value, nTeams: +$('#iTeams').value, teams: itemDlg.teams }; }
 function startNewSchema() {
   const kind = $('#iType').value;
   pendingBlock = { sess: sessId, id: itemDlg.id, refs: itemDlg.refs.slice(), fields: blockFields(), kind, newId: null };
@@ -1453,7 +1577,7 @@ function startNewSchema() {
 }
 function restoreBlock() {
   const pb = pendingBlock; pendingBlock = null;
-  openItemDialog({ id: pb.id, title: pb.fields.title, duration: pb.fields.dur, description: pb.fields.desc, objectives: pb.fields.obj, refs: pb.refs });
+  openItemDialog({ id: pb.id, title: pb.fields.title, duration: pb.fields.dur, description: pb.fields.desc, objectives: pb.fields.obj, refs: pb.refs, nTeams: pb.fields.nTeams, teams: pb.fields.teams });
   if (pb.newId && store.get(pb.newId) && !itemDlg.refs.includes(pb.newId)) itemDlg.refs.push(pb.newId);
   $('#iTitle').value = pb.fields.title; $('#iType').value = pb.kind; fillRefs(pb.kind); renderRefChips();
   if (!pb.id) { $('#itTitle').textContent = 'Nouveau bloc d’entraînement'; $('#iOk').textContent = 'Ajouter'; }
@@ -1469,6 +1593,7 @@ function openItemDialog(it) {
   $('#itTitle').textContent = it && it.id ? 'Modifier le bloc' : 'Nouveau bloc d’entraînement'; $('#iOk').textContent = it && it.id ? 'Enregistrer' : 'Ajouter';
   $('#iTitle').value = it ? it.title || '' : ''; $('#iDur').value = it ? it.duration : '';
   $('#iDesc').value = it ? it.description || '' : ''; $('#iObj').value = it ? it.objectives || '' : '';
+  $('#iTeams').value = String(it && it.nTeams ? it.nTeams : 0); itemDlg.teams = it && it.teams ? it.teams : null;
   $('#iErr').textContent = ''; $('#iType').value = 'exercise'; fillRefs('exercise'); renderRefChips();
   $('#itemDialog').hidden = false; $('#iTitle').focus();
 }
@@ -1484,6 +1609,8 @@ $('#iOk').addEventListener('click', () => {
   if (!title) return err('Donne un titre au bloc.');
   if (!(dur > 0)) return err('La durée est obligatoire (en minutes).');
   const it = { id: itemDlg.id || newId(), title, duration: dur, description: $('#iDesc').value.trim(), objectives: $('#iObj').value.trim(), refs: itemDlg.refs.slice() };
+  const nT = +$('#iTeams').value;
+  if (nT) { it.nTeams = nT; it.teams = itemDlg.teams && itemDlg.teams.length === nT ? itemDlg.teams : makeTeams(presentPlayers(store.get(sessId)), nT); }
   editSess(d => { const i = d.data.items.findIndex(x => x.id === it.id); if (i >= 0) d.data.items[i] = it; else d.data.items.push(it); });
   closeSessDialogs(); renderSession();
 });
@@ -1514,7 +1641,8 @@ function loadImg(src) { return new Promise((res, rej) => { const i = new Image()
 function stepSVG(k, F) {
   let h = path[k].actions.map(a => actionSVG(a, F)).join('');
   for (const pl of state.players) if (F.pos[pl.id]) h += playerSVG(pl, F.pos[pl.id], false);
-  if (F.ball && F.pos[F.ball]) h += ballSVG({ x: F.pos[F.ball].x + 0.38, y: F.pos[F.ball].y - 0.38 });
+  for (const o of state.objs || []) h += objSVG(o, false);
+  for (const b of F.balls) if (F.pos[b]) h += ballSVG(ballAt(F.pos[b]));
   return courtLayer.innerHTML + `<g${state.court === 'full' ? ` transform="${FULL_ROT}"` : ''}>${h}</g>`;
 }
 async function stepImage(title, opt, k, n, F) {
@@ -1603,7 +1731,9 @@ function openBoard(sys, edit) {
     currentId = sys.id; state = migrate(JSON.parse(JSON.stringify(sys.data))); undoStack = []; state.cur = 0;
   }
   recomputePath();
-  mode = edit ? 'edit' : 'view';
+  mode = edit ? 'edit' : 'view'; docKind = sys.kind;
+  $('#board').dataset.kind = sys.kind;
+  if (sys.kind === 'exercise' && /^(O|X)$/.test(tool)) tool = 'P'; else if (sys.kind === 'system' && /^(P|cone|ppass)$/.test(tool)) tool = 'select';
   if (mode === 'view') { sel = null; state.cur = 0; }
   $('#board').dataset.mode = mode;
   $('#toHome').textContent = backTo ? '‹ Séance' : KIND[sys.kind].back;
