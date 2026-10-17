@@ -493,16 +493,28 @@ const drive = {
           callback: r => this.onToken(r), error_callback: () => this.set('off')
         });
         this.set('off');
+        if (this.autoOn()) this.connect();
       } catch (e) { this.set('unavailable'); }
     };
     sc.onerror = () => this.set('unavailable');
     document.head.appendChild(sc);
+    setInterval(() => this.tick(), 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.tick(); });
   },
   set(st) { this.status = st; updateDriveBtn(); },
   connect() { if (this.client) { this.set('connecting'); this.client.requestAccessToken({ prompt: '' }); } },
   onToken(r) {
     if (r.error || !r.access_token) return this.set('off');
     this.token = r.access_token; this.exp = Date.now() + ((r.expires_in || 3600) - 60) * 1000;
+    try { localStorage.setItem('coach-drive-on', '1'); } catch (e) {}
+    this.run(() => this.sync());
+  },
+  // Synchro automatique : à l'ouverture (si déjà connecté), toutes les minutes et au retour sur l'appli.
+  autoOn() { try { return localStorage.getItem('coach-drive-on') === '1'; } catch (e) { return false; } },
+  tick() {
+    if (!this.autoOn() || document.hidden) return;
+    // Jeton expiré : renouvellement silencieux. Si Google refuse, le statut passe à « off » et on n'insiste pas.
+    if (!this.token || Date.now() > this.exp) { if (this.status !== 'off' && this.status !== 'connecting') this.connect(); return; }
     this.run(() => this.sync());
   },
   push() { clearTimeout(this.timer); this.timer = setTimeout(() => this.run(() => this.flush()), 1200); },
